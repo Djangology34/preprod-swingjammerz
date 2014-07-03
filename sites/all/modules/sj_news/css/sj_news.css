@@ -1,0 +1,12 @@
+/* 
+    Document   : sj_news
+    Created on : 17 juin 2014, 14:21:50
+    Author     : david
+    Description:
+        sj_news Module CSS
+*/
+
+#block-sj-news-sj-news { background-color: #000000; color: #ffffff; }
+#block-news .first p { padding: 10% 15%; text-align: justify; }
+#block-news .second { min-width: 300px; min-height: 300px; background: url(../images/bg-news.png) no-repeat 85% #000 fixed; }
+#block-news .second .transparent-circle { min-width: 300px; min-height: 300px; width: 90%; height: 90%; }

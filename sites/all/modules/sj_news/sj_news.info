@@ -1,0 +1,6 @@
+name = Module SwingJammerz News Module
+description = Module showing a block with the News
+core = 7.x
+package = Swing Jammerz
+files[] = sj_news.module
+stylesheets[all][] = css/sj_news.css

@@ -1,0 +1,239 @@
+<?php
+
+/**
+ * @file
+ * Module Swing Jammerz aiming to creating lessons and displaying them
+ */
+
+/**
+ * Implements hook_menu()
+ */
+function sj_lesson_builder_menu() {
+  $items['admin/config/sj_lesson_builder'] = array(
+    'title' => t('Liste des cours'),
+    'page callback' => 'sj_lesson_admin_display',
+    'access callback' => true
+  );
+  
+  $items['admin/config/sj_lesson_builder/new'] = array(
+    'title' => t('Swing Jammerz - Créer un cours'),
+    'description' => 'Swing Jammerz - Créer un cours ',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sj_lesson_builder_admin_form'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'sj_lesson_builder_config.admin.inc',
+    'type' => MENU_NORMAL_ITEM
+  );
+  
+  $items['admin/config/sj_lesson_builder/edit/%'] = array(
+    'title' => t('Swing Jammerz - Editer un cours'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sj_lesson_builder_admin_form', 4),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'sj_lesson_builder_config.admin.inc',
+    'type' => MENU_NORMAL_ITEM
+  );
+  
+  $items['admin/config/sj_lesson_builder/delete/%'] = array(
+    'title' => t('Swing Jammerz - Supprimer un cours'),
+    'page callback' => 'sj_lesson_builder_admin_delete',
+    'page arguments' => array(4),
+    'access callback' => true,
+    'file' => 'sj_lesson_builder_config.admin.inc'
+  );
+  
+  $items['cours'] = array(
+    'title' => t('Les cours'),
+    'page callback' => 'sj_lesson_builder_display',
+    'access callback' => true
+  );
+
+  return $items;
+}
+
+/**
+ * Display lessons created in Admin
+ * 
+ * @return array $output
+ */
+function sj_lesson_admin_display() {
+  $lessons = db_select('sj_lessons', 'l')
+    ->fields('l')
+    ->execute()
+    ->fetchAll();
+
+  $create_link = '<br/><a href="/admin/config/sj_lesson_builder/new">'
+    . t('Créer un nouveau cours')
+    . '</a><br/><br/>';
+
+  if (!count($lessons)) {
+    return array('lessons' => array(
+      '#type' => 'markup',
+      '#markup' => t("Aucun cours n'a été créé.") . '<br/>' .$create_link,
+    ));
+  }
+  
+  $content = '<h3>' . t('Liste des cours créés:') . '</h3><br/>';
+  $content .= '<ul>';
+  
+  foreach ($lessons as $lesson) {
+    $enabled = $lesson->enabled ? '<span class="label label-success">actif</span> - ' : '<span class="label label-danger">inactif</span> - ';
+    $full = $lesson->full ? '<span class="label label-danger">plein</span>' : '<span class="label label-success">disponible</span>';
+    
+    $content .= '<li>' . $lesson->name
+            . ' - <a href="/admin/config/sj_lesson_builder/edit/' . $lesson->sjl_id . '">' . t('modifier') . '</a>'
+            . ' - <a href="/admin/config/sj_lesson_builder/delete/' . $lesson->sjl_id . '">' . t('supprimer') . '</a> - '
+            . $enabled . $full
+            . '</li>';
+  }
+  $content .= '</ul>';
+  
+  $output = array(
+    'lessons' => array(
+      '#type' => 'markup',
+      '#markup' => $content . $create_link,
+    ),
+  );
+  
+  return $output;
+}
+
+/**
+ * Display content
+ */
+function sj_lesson_builder_display(){
+  $output = array(
+    'lessons' => array(
+      '#type' => 'markup',
+      '#markup' => '<p>Hello World</p>',
+    ),
+  );
+
+  return $output;
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function sj_lesson_builder_block_info() {
+  $blocks = array();
+  
+  $blocks['sj_lesson_builder'] = array(
+    'info' => t('Swing Jammerz - Liste des cours')
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+function sj_lesson_builder_block_configure($delta='') {
+  $form = array();
+
+  switch($delta) {
+    case 'sj_lesson_builder' :
+    // Text field form element
+    $form['text_body'] = array(
+      '#type' => 'text_format',
+      '#title' => t('Enter your text here in WYSIWYG format'),
+      '#default_value' => variable_get('text_variable', ''),
+    );
+      
+    break;
+  }
+  
+  return $form;
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function sj_lesson_builder_block_save($delta = '', $edit = array()) {
+  switch($delta) {
+    case 'sj_lesson_builder' :
+    variable_set('text_variable', $edit['text_body']['value']);
+      
+    break;
+  }
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function sj_lesson_builder_block_view($delta = '') {
+  $block = array();
+
+  switch ($delta) {
+    case 'sj_lesson_builder' :
+      $block['content'] = sj_lesson_builder_view();
+      break;
+  }
+
+  return $block;
+}
+
+/**
+ * Custom function to assemble renderable array for block content.
+ * Returns a renderable array with the block content.
+ * @return
+ * returns a renderable array of block content.
+ */
+function sj_lesson_builder_view() {
+  $block = array();
+  
+  // Capture WYSIWYG text from the variable
+  $text = variable_get('text_variable', '');
+
+  // Replace variables with values
+  if (strpos($text, '{lessons}')) {
+    $lessons = db_select('sj_lessons', 'l')
+            ->fields('l')
+            ->addTag('translatable')
+            ->execute()
+            ->fetchAll();
+  }
+  
+  if (count($lessons)) {
+    $lessons = sort_lessons_by_day($lessons);
+    
+    $list = '<div id="lessons">';
+    foreach ($lessons as $day => $lessons_per_day) {
+      $list .= '<div class="lessons-day">'
+            . '<h3>' . $day . '</h3>';
+      
+      foreach($lessons_per_day as $lesson) {
+        $list .= '<p>' . $lesson->type . ' ' . $lesson->level . '<br/>'
+              . t('horaire') . ': ' . $lesson->time . '<br/>'
+              . t('lieu') . ': ' . $lesson->place . '</p>';
+      }
+      
+      $list .= '</div>';
+    }
+    
+    $list .= '</div><div class="clear"></div>';
+    
+    $text = str_replace('{lessons}', $list, $text);
+  }
+  
+  // Block output in HTML with div wrapper
+  $block = array(
+    'message' => array(
+      '#type' => 'markup',
+      '#markup' => $text,
+      '#suffix' => '',
+    ),
+  );
+
+  return $block;
+}
+
+function sort_lessons_by_day(array $lessons) {
+  $result = array();
+  
+  foreach ($lessons as $lesson) {
+    $result[$lesson->day][] = $lesson; 
+  }
+  
+  return $result;
+}

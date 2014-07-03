@@ -1,0 +1,39 @@
+INSERT INTO `sj_lessons` (`sjl_id`, `name`, `type`, `day`, `time`, `level`, `place_id`, `max_capacity_leader`, `max_capacity_follower`, `enabled`, `full`, `language`, `year`) VALUES
+(3, 'Cours Lundi - Lindy Hop Avancé Mpt Chopin', 'lindy hop', 'lundi', '19:00', 'avancé', 1, 12, 18, 1, 0, 'fr', '2014'),
+(6, 'Cours Mardi - Lindy Hop Débutant Entrepôt', 'lindy hop', 'mardi', '21:00', 'débutant', 2, 20, 20, 1, 0, 'fr', '2014'),
+(7, 'Cours Lundi - Lindy Hop Débutant Mpt Chopin', 'lindy hop', 'lundi', '19:00', 'débutant', 1, 15, 25, 1, 0, 'fr', '2014'),
+(8, 'Cours Mercredi - Charleston Solo Intermédiaire Cap Form', 'lindy hop', 'mercredi', '22:00', 'intermédiaire', 3, 0, 30, 1, 0, 'fr', '2014'),
+(9, 'Cours Jeudi - Charleston Solo Mpt Chopin', 'charleston solo', 'jeudi', '21:00', 'débutant', 1, 25, 0, 1, 0, 'fr', '2014'),
+(10, 'Cours Vendredi Lindy Hop Avancé', 'lindy hop', 'vendredi', '21:00 - 22:00', 'avancé', 2, 20, 20, 1, 0, 'fr', '2014');
+
+INSERT INTO `sj_places` (`id`, `name`, `address`, `postcode`, `city`, `latitude`, `longitude`, `enabled`, `year`, `created_at`) VALUES
+(1, 'Mpt Chopin', '35 avenue de Nîmes', '34000', 'Montpellier', '43.596408', '3.886779', 1, '2014', '2014-06-25 16:55:15'),
+(2, 'L''Entrepôt', '4 rue Montels l''église', '34970', 'Lattes', '43.576126', '3.872639', 1, '2014', '2014-06-25 16:56:10'),
+(3, 'Cap Form', '77 av de palavas', '34070', 'Montpellier', '43.596369', '3.887974', 1, '2014', '2014-06-25 16:56:58');
+
+INSERT INTO `sj_passes` (`sjp_id`, `name`, `price`, `currency`, `year`, `nb_lessons`, `enabled`, `created_at`) VALUES
+(1, 'Pass 1 cours à l''année', '150', 'EUR', '2014', '1', 1, '2014-06-09 17:11:07'),
+(2, 'Pass 2 cours à l''année', '230', 'EUR', '2014', '2', 1, '2014-06-09 17:11:19'),
+(3, 'Pass cours', '300', 'EUR', '2014', 'all', 1, '2014-06-09 17:11:32'),
+(4, 'Pass Swing', '500', 'EUR', '2014', 'all', 1, '2014-06-09 17:11:46');
+
+INSERT INTO `sj_students` (`sjs_id`, `firstname`, `lastname`, `gender`, `email`, `phone`, `address`, `postcode`, `city`, `pass_id`, `payed`, `payment_method`, `waiting_list`, `couple_id`, `enabled`, `language`, `created_at`) VALUES
+(1, 'David', 'Tavani', 'masculin', 'swingjammerzband@gmail.com', '0626237158', '300 avenue Saint Maur', '34000', 'Montpellier', 4, 0, 'paypal', 0, 2, 1, 'fr', '2014-06-12 17:38:09'),
+(2, 'Katalin', 'Somlai', 'féminin', 'swingjammerzband@gmail.com', '0626237158', '33 rue Django Reinhardt', '34000', 'Budapest', 4, 0, 'paypal', 0, 1, 1, 'fr', '2014-06-12 17:38:09'),
+(3, 'Fernando', 'Morisson', 'masculin', 'fer@fer.com', '065546', 'test', '34598', 'Montpellier', 4, 0, 'cheque', 1, NULL, 1, 'fr', '2014-06-13 11:46:38'),
+(4, 'Simon', 'Laurent', 'masculin', 'simon.laurent@gmail.com', '06578648498', 'Adresse de Simon', '34000', 'Montpellier', 4, 0, 'paypal', 0, 5, 1, 'fr', '2014-07-01 17:01:04'),
+(5, 'Luana', 'Jugmann', 'féminin', 'luana@gmail.com', '0754651565', 'Adresse Luana', '34000', 'Montpellier', 4, 0, 'paypal', 0, 4, 1, 'fr', '2014-07-01 17:01:04');
+
+INSERT INTO `sj_students_lessons` (`sj_student_id`, `sj_lesson_id`) VALUES
+(1, 6),
+(2, 6),
+(1, 7),
+(2, 7),
+(1, 9),
+(2, 9),
+(3, 6),
+(3, 7),
+(4, 6),
+(5, 6),
+(4, 7),
+(5, 7);

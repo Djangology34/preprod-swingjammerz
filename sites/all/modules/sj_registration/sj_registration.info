@@ -1,0 +1,8 @@
+name = Module SwingJammerz Registration
+description = Module allowing Registrations to lessons and practices
+core = 7.x
+package = Swing Jammerz
+configure = admin/config/sj_registration
+files[] = sj_registration.module
+files[] = sj_registration.install
+dependencies[] = tipsy

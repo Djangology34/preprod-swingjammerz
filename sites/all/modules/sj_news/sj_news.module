@@ -1,0 +1,93 @@
+<?php
+
+/**
+ * @file
+ * Module Swing Jammerz showing the News Block
+ */
+
+/**
+ * Implements hook_block_info().
+ */
+function sj_news_block_info() {
+  $blocks = array();
+  
+  $blocks['sj_news'] = array(
+    'info' => t('Swing Jammerz - News')
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+function sj_news_block_configure($delta='') {
+  $form = array();
+
+  switch($delta) {
+    case 'sj_news' :
+    // Text field form element
+    $form['text_body'] = array(
+      '#type' => 'text_format',
+      '#title' => t('Enter your text here in WYSIWYG format'),
+      '#default_value' => variable_get('sj_news_block', ''),
+    );
+      
+    break;
+  }
+  
+  return $form;
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function sj_news_block_save($delta = '', $edit = array()) {
+  switch($delta) {
+    case 'sj_news' :
+    variable_set('sj_news_block', $edit['text_body']['value']);
+      
+    break;
+  }
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function sj_news_block_view($delta = '') {
+  $block = array();
+
+  switch ($delta) {
+    case 'sj_news' :
+      $block['content'] = sj_news_view();
+      break;
+  }
+
+  return $block;
+}
+
+/**
+ * Google maps view
+ *
+ * @return array 
+ */
+function sj_news_view() {
+  $block = array();
+  $text = variable_get('sj_news_block', '');
+
+  $output = '<div id="block-news" class="two-columns"><div class="first">'
+            . $text . '</div>'
+            . '<div class="second"><img src="http://' . $_SERVER['HTTP_HOST'] . '/sites/all/modules/sj_news/images/transparent-circle.png" class="transparent-circle" /></div>'
+            . '<div class="clear"></div></div>';
+  
+  // Block output in HTML with div wrapper
+  $block = array(
+    'message' => array(
+      '#type' => 'markup',
+      '#markup' => $output,
+      '#suffix' => '',
+    ),
+  );
+
+  return $block;
+}

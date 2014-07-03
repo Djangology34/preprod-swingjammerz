@@ -1,0 +1,6 @@
+#!/bin/bash
+drush pm-disable sj_gmaps
+drush pm-uninstall sj_gmaps
+drush dre sj_registration
+drush en sj_gmaps
+

@@ -1,0 +1,1377 @@
+<?php
+
+/**
+ * @file
+ * Module Swing Jammerz for the Registration process
+ */
+
+/**
+ * Implements Registration hook_menu()
+ */
+function sj_registration_menu() {
+  // Frontend registration
+  $items['inscription'] = array(
+    'title' => t('Inscription'),
+    'description' => t("Formulaire d'inscription au cours"),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sj_registration_ajax_form'),
+    'access callback' => true
+  );
+  
+  // Admin Registration page for lessons and stage
+  $items['admin/config/sj_registration'] = array(
+    'title' => t('Swing Jammerz - Cours'),
+    'description' => t('Swing Jammerz - Liste des pass, des cours et des élèves'),
+    'page callback' => 'sj_registration_admin',
+    'access arguments' => array('administer site configuration'),
+    'file' => 'sj_registration_config.admin.inc'
+  );
+  
+  $items['admin/config/sj_registration/stage'] = array(
+    'title' => t('Swing Jammerz - Stage'),
+    'description' => t('Swing Jammerz - Liste des stages et des élèves'),
+    'page callback' => 'sj_registration_admin_stage',
+    'access arguments' => array('administer site configuration'),
+    'file' => 'sj_registration_config.admin.inc'
+  );
+  
+  // Season Management
+  $items['admin/config/sj_registration/season/edit'] = array(
+    'title' => t('Swing Jammerz - Editer la saison actuelle'),
+    'description' => 'Swing Jammerz - Editer la saison actuelle',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sj_registration_season_admin_form'),
+    'access arguments' => array('administer site configuration')
+  );
+  
+  $items['admin/config/sj_registration/filter/edit'] = array(
+    'title' => t('Swing Jammerz - Editer la saison du filtre'),
+    'description' => 'Swing Jammerz - Editer la saison du filtre',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sj_registration_filter_admin_form'),
+    'access arguments' => array('administer site configuration')
+  );
+  
+  // Pass Management
+  $items['admin/config/sj_registration/pass/new'] = array(
+    'title' => t('Swing Jammerz - Créer un pass'),
+    'description' => 'Swing Jammerz - Créer un pass',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sj_registration_pass_admin_form'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'sj_registration_config_pass.admin.inc'
+  );
+  
+  $items['admin/config/sj_registration/pass/edit/%'] = array(
+    'title' => t('Swing Jammerz - Editer un pass'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sj_registration_pass_admin_form', 5),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'sj_registration_config_pass.admin.inc'
+  );
+  
+  $items['admin/config/sj_registration/pass/delete/%'] = array(
+    'title' => t('Swing Jammerz - Supprimer un pass'),
+    'page callback' => 'sj_registration_pass_admin_delete',
+    'page arguments' => array(5),
+    'access callback' => true,
+    'file' => 'sj_registration_config_pass.admin.inc'
+  );
+  
+  // Student Management
+  $items['admin/config/sj_registration/student/edit/%'] = array(
+    'title' => t('Swing Jammerz - Editer un élève'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sj_registration_student_admin_form', 5),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'sj_registration_config_student.admin.inc'
+  );
+  
+  $items['admin/config/sj_registration/student/delete/%'] = array(
+    'title' => t('Swing Jammerz - Supprimer un élève'),
+    'page callback' => 'sj_registration_student_admin_delete',
+    'page arguments' => array(5),
+    'access callback' => true,
+    'file' => 'sj_registration_config_student.admin.inc'
+  );
+  
+  // Lesson Management
+  $items['admin/config/sj_registration/lesson/new'] = array(
+    'title' => t('Swing Jammerz - Créer un cours'),
+    'description' => 'Swing Jammerz - Créer un cours ',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sj_registration_lesson_admin_form'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'sj_registration_config_lesson.admin.inc'
+  );
+  
+  $items['admin/config/sj_registration/lesson/edit/%'] = array(
+    'title' => t('Swing Jammerz - Editer un cours'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sj_registration_lesson_admin_form', 5),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'sj_registration_config_lesson.admin.inc'
+  );
+  
+  $items['admin/config/sj_registration/lesson/delete/%'] = array(
+    'title' => t('Swing Jammerz - Supprimer un cours'),
+    'page callback' => 'sj_registration_lesson_admin_delete',
+    'page arguments' => array(5),
+    'access callback' => true,
+    'file' => 'sj_registration_config_lesson.admin.inc'
+  );
+  
+  // Place Management
+  $items['admin/config/sj_registration/place/new'] = array(
+    'title' => t('Swing Jammerz - Créer un lieu'),
+    'description' => 'Swing Jammerz - Créer un lieu',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sj_registration_place_admin_form'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'sj_registration_config_place.admin.inc'
+  );
+  
+  $items['admin/config/sj_registration/place/edit/%'] = array(
+    'title' => t('Swing Jammerz - Editer un lieu'),
+    'description' => 'Swing Jammerz - Editer un lieu',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sj_registration_place_admin_form', 5),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'sj_registration_config_place.admin.inc'
+  );
+  
+  $items['admin/config/sj_registration/place/delete/%'] = array(
+    'title' => t('Swing Jammerz - Supprimer un lieu'),
+    'page callback' => 'sj_registration_place_admin_delete',
+    'page arguments' => array(5),
+    'access callback' => true,
+    'file' => 'sj_registration_config_place.admin.inc'
+  );
+  
+  return $items;
+}
+
+// Edit Season
+
+/**
+ * Edit current season hook_form()
+ *
+ * @param type $form
+ * @param type $form_state
+ * 
+ * @return array $form 
+ */
+function sj_registration_season_admin_form($form, &$form_state) {
+  $form['season_year'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Année de la saison actuelle'),
+    '#default_value' => get_season_year(),
+    '#size' => 50,
+    '#maxlength' => 128,
+    '#required' => true
+  );
+  
+  $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => 'Mettre à jour',
+      '#submit' => array('sj_registration_season_admin_submit'),
+  );
+ 
+  return $form;
+}
+
+/**
+ * Season save in config variables hook_submit()
+ *
+ * @param type $form
+ * @param type $form_state 
+ */
+function sj_registration_season_admin_submit($form, &$form_state) {
+  $value = $form_state['values']['season_year'];
+  
+  variable_set('sj_registration_season_year', $value);
+  drupal_set_message('Année actuel mise à jour à ' . $value);
+  
+  drupal_goto('/admin/config/sj_registration');
+}
+
+/**
+ * Edit filter season hook_form()
+ *
+ * @param type $form
+ * @param type $form_state
+ * 
+ * @return array $form 
+ */
+function sj_registration_filter_admin_form($form, &$form_state) {
+  $form['filter_year'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Année de la saison du filtre'),
+    '#default_value' => get_filter_year(),
+    '#size' => 50,
+    '#maxlength' => 128,
+    '#required' => true
+  );
+  
+  $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => 'Mettre à jour',
+      '#submit' => array('sj_registration_filter_admin_submit'),
+  );
+ 
+  return $form;
+}
+
+/**
+ * Season save in config variables hook_submit()
+ *
+ * @param type $form
+ * @param type $form_state 
+ */
+function sj_registration_filter_admin_submit($form, &$form_state) {
+  $value = $form_state['values']['filter_year'];
+  
+  variable_set('sj_registration_filter_year', $value);
+  drupal_set_message('Année du filtre mise à jour à ' . $value);
+  
+  drupal_goto('/admin/config/sj_registration');
+}
+
+// Display and Edit Lessons
+
+/**
+ * Implements hook_block_info().
+ */
+function sj_registration_block_info() {
+  $blocks = array();
+  
+  $blocks['sj_registration'] = array(
+    'info' => t('Swing Jammerz - Liste des cours')
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+function sj_registration_block_configure($delta='') {
+  $form = array();
+
+  switch($delta) {
+    case 'sj_registration' :
+    // Text field form element
+    $form['text_body'] = array(
+      '#type' => 'text_format',
+      '#title' => t('Enter your text here in WYSIWYG format'),
+      '#default_value' => variable_get('sj_registration_block', ''),
+    );
+      
+    break;
+  }
+  
+  return $form;
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function sj_registration_block_save($delta = '', $edit = array()) {
+  switch($delta) {
+    case 'sj_registration' :
+    variable_set('sj_registration_block', $edit['text_body']['value']);
+      
+    break;
+  }
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function sj_registration_block_view($delta = '') {
+  $block = array();
+
+  switch ($delta) {
+    case 'sj_registration' :
+      $block['content'] = sj_registration_view();
+      break;
+  }
+
+  return $block;
+}
+
+/**
+ * Custom function to assemble renderable array for block content.
+ * Returns a renderable array with the block content.
+ * @return
+ * returns a renderable array of block content.
+ */
+function sj_registration_view() {
+  $block = array();
+  
+  // Capture WYSIWYG text from the variable
+  $text = variable_get('sj_registration_block', '');
+
+  // Replace variables with values
+  if (strpos($text, '{lessons}')) {
+    $lessons = db_select('sj_lessons', 'l')
+            ->fields('l')
+            ->condition('l.year', get_season_year())
+            ->condition('l.enabled', true)
+            ->condition('l.event', 'cours')
+            ->execute()
+            ->fetchAll();
+  }
+  
+  if (count($lessons)) {
+    $lessons = sort_lessons_by_day($lessons);
+    
+    $list = '<div id="lessons">';
+    foreach ($lessons as $day => $lessons_per_day) {
+      $list .= '<div class="lessons-day">'
+            . '<h3>' . $day . '</h3>';
+      
+      foreach($lessons_per_day as $lesson) {
+        $place = db_select('sj_places', 'p')
+                ->fields('p', array('name'))
+                ->condition('p.id', $lesson->place_id)
+                ->condition('p.year', get_season_year())
+                ->condition('p.enabled', true)
+                ->execute()
+                ->fetch();
+        
+        $list .= '<p>' . $lesson->type . ' ' . $lesson->level . '<br/>'
+              . t('horaire') . ': ' . $lesson->time . '<br/>';
+        
+        if ($place instanceof stdClass) {
+          $list .= t('lieu') . ': ' . $place->name . '</p><br/>';
+        }
+      }
+      
+      $list .= '</div>';
+    }
+    
+    $list .= '</div><div class="clear"></div>';
+    
+    $text = str_replace('{lessons}', $list, $text);
+  }
+  
+  // Block output in HTML with div wrapper
+  $block = array(
+    'message' => array(
+      '#type' => 'markup',
+      '#markup' => $text,
+      '#suffix' => '',
+    ),
+  );
+
+  return $block;
+}
+
+/**
+ * Sort lessons by day
+ *
+ * @param array $lessons
+ * @return array $result
+ */
+function sort_lessons_by_day(array $lessons) {
+  $result = array();
+  $days_order = array('lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche');
+  
+  foreach ($days_order as $day) {
+    foreach ($lessons as $lesson) {
+        if ($day === $lesson->day) {
+            $result[$day][] = $lesson;
+        }
+    }
+  }
+  
+  return $result;
+}
+
+// Registration Ajax Form
+
+/**
+ * Implements theme_hook_alter()
+ *
+ * @param array $form
+ * @param array $form_state
+ * @param string $form_id 
+ */
+function sj_registration_form_alter(&$form, $form_state, $form_id) {
+  if ($form_id === 'sj_registration_ajax_form') {
+    $elements = array('pass_id', 'lessons');
+    
+    foreach ($elements as $element) {
+      if (isset($form[$element])) {
+        $style = $element === 'pass_id' ? array('success', 'info', 'warning', 'danger') : array('success');
+        $form = generate_buttons($form, $element, $style);
+      }
+    }
+  }
+}
+
+/**
+ * Generate buttons for sj_registration_ajax_form
+ *
+ * @param array $form
+ * @param string $element
+ * @param array $style
+ * @return boolean|string 
+ */
+function generate_buttons(array $form, $element, $style = array('default')) {
+  if (!isset($form[$element]['#options'])) {
+    return false;
+  }
+
+  $buttons = '<div class="custom-form-buttons">';
+  foreach($form[$element]['#options'] as $key => $option) {
+    $price = null;
+    $name = null;
+    preg_match('/data-price=\"(.*?)\"/', $option, $price);
+    preg_match('/data-name=\"(.*?)\"/', $option, $name);
+    
+    $id = 'edit-' . str_replace('_', '-', $element) . '-' . $key;
+    $buttons .= '<button data-id="' . $id . '" data-type="' . $form[$element]['#type']
+            . '" data-value="' . $key . '" data-name="' . $name[1] . '" data-price="' . $price[1] . '" class="btn btn-'
+            . current($style) . ' btn-lg">' . $option . '</button>';
+    
+    if (next($style)) {
+    } else {
+      reset($style);
+    }
+  }
+  $buttons .= '</div>';
+  
+  $form[$element]['#prefix'] = isset($form[$element]['#prefix']) ? $form[$element]['#prefix'] .  $buttons : $buttons;
+  $form[$element]['#prefix'] .= '<div class="hidden">';
+  
+  $form[$element]['#suffix'] = isset($form[$element]['#suffix']) ? $form[$element]['#suffix'] . '</div>' : '</div>';
+  
+  return $form;
+}
+
+/**
+ * Implements Registration ajax form hook_form
+ *
+ * @param array $form
+ * @param array $form_state
+ *
+ * @return array 
+ */
+function sj_registration_ajax_form($form, &$form_state) {
+  drupal_add_js(drupal_get_path('module', 'sj_registration') .'/js/sj_registration.js');
+  
+  // Get passes
+  $passes = db_select('sj_passes', 'p')
+            ->fields('p')
+            ->condition('p.year', get_season_year())
+            ->condition('p.enabled', true)
+            ->execute()
+            ->fetchAll();
+  
+  $form_state['storage']['currency'] = current($passes)->currency;
+  $currency = currency_symbole($form_state['storage']['currency']);
+  
+  // If $form_state['step'] is not set, we set it to 1
+	$form_state['step'] = isset($form_state['step']) ? $form_state['step'] : 1;
+  
+  // Depending on which step of the form we are on, we output different form fields
+  switch($form_state['step']) {
+    // Pass and type
+    case 1:
+      $form['#prefix'] = '';
+      
+      if (!isset($form_state['storage']['form-pricer'])) {
+        $form['#prefix'] .= '<div id="registration-form-pricer"><h3 class="no-margin">' . t('Calcul du prix') . '</h3>'
+                . '( <span id="price-first" class="pointer" title="' . t('Adhésion') . '">' . $currency . ' 15</span>'
+                . ' + ' . $currency . ' <span id="price-pass" class="pointer" data-price="0">0</span> )'
+                . ' x <span id="price-type" class="pointer" title="' . t('Seul') . '" data-value="1">1</span>'
+                . ' = <span id="price-total" class="pointer" title="' . t('Total') . '">15</span><span> ' . $currency . '</span></span></div>'
+                . '<div id="registration-form-pricer-wrapper"></div>';
+        
+        $form_state['storage']['form-pricer'] = true;
+      }
+      
+      $form['#prefix'] .= '<div id="sj_registration_ajax_form">';
+      $form['#prefix'] .= '<div class="intro"><p>' . t('Bienvenue sur la page d\'inscription des Swing Jammerz.')
+            . '</p><p>' . t('Les Swing Jammerz étant une association, il est nécessaire d\'y adhérer afin de pouvoir s\'inscrire aux cours. Le prix de l\'adhésion est de 15€.')
+            . '</p></div>';
+      
+      $form['type'] = array(
+        '#prefix' => '<label class="label-title">' . t("Quel type d'inscription?") . '</label>',
+        '#type' => 'radios',
+        '#default_value' => isset($form_state['storage']['type']) ? $form_state['storage']['type'] : null,
+        '#options' => array(
+            'seul' => t('Seul'),
+            'couple' => t('Couple')
+        ),
+        '#required' => TRUE
+      );
+      
+      $form['gender'] = array(
+        '#type' => 'radios',
+        '#prefix' => '<label class="label-title">' . t("Quel est votre genre?") . '</label>',
+        '#default_value' => isset($form_state['storage']['gender']) ? $form_state['storage']['gender'] : null,
+        '#options' => array(
+            'masculin' => t('Masculin'),
+            'féminin' => t('Féminin')
+        ),
+        '#required' => TRUE
+      );
+      
+      break;
+
+    // Level
+    case 2:
+      // Give the pass selected in order to active the right pass button
+      if (isset($form_state['storage']['pass_id'])) {
+        drupal_add_js(array('sj_registration' => array('datas' => array(
+            'name' => 'pass-id',
+            'step' => '2',
+            'data' => $form_state['storage']['pass_id']
+        ))), 'setting');
+      }
+      
+      $form['#prefix'] = '<div id="sj_registration_ajax_form">';
+      
+      $form['level'] = array(
+        '#type' => 'radios',
+        '#prefix' => '<label class="label-title">' . t("Quel est votre niveau?") . '</label>',
+        '#default_value' => isset($form_state['storage']['level']) ? $form_state['storage']['level'] : null,
+        '#options' => array(
+            'débutant'      => t('Débutant'),
+            'intermédiaire' => t('Intermédiaire'),
+            'avancé'        => t('Avancé')
+        ),
+        '#required' => TRUE
+      );
+      
+      if (!$passes && !count($passes)) {
+        drupal_set_message(t('Formulaire d\'inscription momentanément indisponible...'), 'error');
+        
+        drupal_goto('/');
+      }
+      
+      $options = array();
+      foreach ($passes as $pass) {
+        $options[$pass->sjp_id] = $pass->name . '<br/><span data-name="' . $pass->name . '" data-price="' . $pass->price . '">' . $pass->price . ' ' . $currency . '</span>';
+      }
+      
+      $form['pass_id'] = array(
+        '#type' => 'radios',
+        '#prefix' => '<label class="label-title">' . t("Quel Pass choisissez-vous?") . '</label>',
+        '#default_value' => isset($form_state['storage']['pass_id']) ? $form_state['storage']['pass_id'] : null,
+        '#options' => $options,
+        '#required' => TRUE
+      );
+      
+      break;
+
+    // Lessons
+    case 3:
+      $form['#prefix'] = '<div id="sj_registration_ajax_form">';
+      
+      $form_state['storage']['lessons'] = null;
+      
+      $lessons = db_select('sj_lessons', 'l')
+            ->fields('l')
+            ->condition('level', $form_state['storage']['level'])
+            ->condition('l.year', get_season_year())
+            ->condition('l.enabled', true)
+            ->condition('l.full', false)
+            ->condition('l.event', 'cours')
+            ->execute()
+            ->fetchAll();
+      
+      if (!count($lessons)) {
+        drupal_set_message(t('Aucune leçon trouvée. Contactez l\'association'), 'error');
+      }
+      
+      $pass = db_select('sj_passes', 'p')
+              ->fields('p', array('sjp_id', 'nb_lessons'))
+              ->condition('sjp_id', $form_state['storage']['pass_id'])
+              ->execute()
+              ->fetch();
+      
+      if(!$pass) {
+        drupal_set_message(t('Formulaire d\'inscription momentanément indisponible...'), 'error');
+        
+        drupal_goto('/');
+      }
+      
+      // Check availability for lessons
+      $options = array();
+      foreach ($lessons as $lesson) {
+        $lesson_couple = $lesson->type === 'couple';
+        $lesson_datas = check_availability($lesson);
+        
+        if ($is_couple) {
+          if ($lesson_couple && ($lesson_datas['leader']['availability'] <= 0 || $lesson_datas['follower']['availability'] <= 0) 
+                  || !$lesson_couple && ($lesson_datas['leader']['availability'] <= 1)) {
+            // No place available then do not suggest the lesson
+            continue;
+          }
+        } else {
+          if ($is_leader || !$is_couple) {
+            if ($lesson_datas['leader']['availability'] <= 0) {
+              // No place available then do not suggest the lesson
+              continue;
+            }
+          } else {
+            if ($lesson_datas['follower']['availability'] <= 0) {
+              // No place available then do not suggest the lesson
+              continue;
+            }
+          }
+        }
+        
+        // Check if the student should be registered to option list
+        if (check_lesson_full($lesson, $form_state['storage']['gender'], $form_state['storage']['type'])) {
+          $options[$lesson->sjl_id] = '<span class="lesson-option-list"></span>' . $lesson->name;
+          
+          $form['couple'] = array('#markup' => t('Attention! Certains cours sont complets. Vous pouvez vous inscrire en liste d\'attente sur ces cours.<br/> Alors nous vous tiendrons alors informé par mail.') . '</div><br/>');
+        } else {
+          $options[$lesson->sjl_id] = $lesson->name;
+        }
+      }
+      
+      $nb_lessons = $pass->nb_lessons === 'all' ? 'les' : $pass->nb_lessons;
+      
+      $form['lessons'] = array(
+        '#type' => 'checkboxes',
+        '#prefix' => '<label class="label-title">' . t('Choisissez @nb_lessons cours auquel vous souhaitez vous inscrire:', array('@nb_lessons' => $nb_lessons)) . '</label>',
+        '#options' => $options,
+        '#required' => TRUE
+      );
+      
+      break;
+      
+    // User info
+    case 4:
+      $form['#prefix'] = '<div id="sj_registration_ajax_form">';
+      $form['#suffix'] = '</div><div class="clear"></div>';
+      
+      if ($form_state['storage']['type'] === 'couple') {
+        $form['#prefix'] .= '<div class="two-columns">';
+        $form['seul'] = array('#markup' => '<div class="first"><h3 class="lobster">' . t('Vos coordonnées') . '</h3><br/>');
+      } else {
+        $form['#prefix'] .= '<div class="one-column">';
+      }
+      
+      $form['firstname'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Votre prénom:'),
+        '#default_value' => isset($form_state['storage']['firstname']) ? $form_state['storage']['firstname'] : null,
+        '#size' => 50,
+        '#maxlength' => 128,
+        '#required' => true
+      );
+      
+      $form['lastname'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Votre nom:'),
+        '#default_value' => isset($form_state['storage']['lastname']) ? $form_state['storage']['lastname'] : null,
+        '#size' => 50,
+        '#maxlength' => 128,
+        '#required' => true
+      );
+      
+      $form['email'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Votre adresse email:'),
+        '#default_value' => isset($form_state['storage']['email']) ? $form_state['storage']['email'] : null,
+        '#size' => 50,
+        '#maxlength' => 128,
+        '#required' => true,
+        '#element_validate' => array('myelement_email_validate')
+      );
+      
+      $form['second_email'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Confirmer votre adresse email:'),
+        '#default_value' => null,
+        '#size' => 50,
+        '#maxlength' => 128,
+        '#required' => true
+      );
+      
+      $form['phone'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Votre numéro de téléphone:'),
+        '#default_value' => isset($form_state['storage']['phone']) ? $form_state['storage']['phone'] : null,
+        '#size' => 50,
+        '#maxlength' => 128,
+        '#required' => true
+      );
+      
+      $form['address'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Votre adresse:'),
+        '#default_value' => isset($form_state['storage']['address']) ? $form_state['storage']['address'] : null,
+        '#size' => 50,
+        '#maxlength' => 255,
+        '#required' => true
+      );
+      
+      $form['postcode'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Votre code postal:'),
+        '#default_value' => isset($form_state['storage']['postcode']) ? $form_state['storage']['postcode'] : null,
+        '#size' => 50,
+        '#maxlength' => 128,
+        '#required' => true
+      );
+      
+      $form['city'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Votre ville:'),
+        '#default_value' => isset($form_state['storage']['city']) ? $form_state['storage']['city'] : null,
+        '#size' => 50,
+        '#maxlength' => 128,
+        '#required' => true
+      );
+      
+      $form['registered_last_year'] = array(
+        '#type' => 'radios',
+        '#title' => t("Etiez-vous inscrit l'année dernière?"),
+        '#default_value' => isset($form_state['storage']['registered_last_year']) ? $form_state['storage']['registered_last_year'] : null,
+        '#options' => array(
+            1 => t('Oui'),
+            0 => t('Non')
+        ),
+        '#suffix' => '</div>'
+      );
+      
+      if ($form_state['storage']['type'] === 'couple') {
+        $form_state['storage']['couple_gender'] = $form_state['storage']['gender'] === 'masculin' ? 'féminin' : 'masculin';
+        $form['couple'] = array('#markup' => '<div class="second"><h3 class="lobster">' . t('Coordonnées du partenaire') . '</h3><br/>');
+        
+        $form['couple_firstname'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Prénom du partenaire:'),
+          '#default_value' => isset($form_state['storage']['couple_firstname']) ? $form_state['storage']['couple_firstname'] : null,
+          '#size' => 50,
+          '#maxlength' => 128,
+          '#required' => true
+        );
+
+        $form['couple_lastname'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Nom du partenaire:'),
+          '#default_value' => isset($form_state['storage']['couple_lastname']) ? $form_state['storage']['couple_lastname'] : null,
+          '#size' => 50,
+          '#maxlength' => 128,
+          '#required' => true
+        );
+
+        $form['couple_email'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Adresse email du partenaire:'),
+          '#default_value' => isset($form_state['storage']['couple_email']) ? $form_state['storage']['couple_email'] : null,
+          '#size' => 50,
+          '#maxlength' => 128,
+          '#required' => true,
+          '#element_validate' => array('myelement_email_validate')
+        );
+        
+        $form['couple_second_email'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Confirmer l\'adresse email de votre partenaire:'),
+        '#default_value' => null,
+        '#size' => 50,
+        '#maxlength' => 128,
+        '#required' => true
+      );
+
+        $form['couple_phone'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Téléphone du partenaire:'),
+          '#default_value' => isset($form_state['storage']['couple_phone']) ? $form_state['storage']['couple_phone'] : null,
+          '#size' => 50,
+          '#maxlength' => 128,
+          '#required' => true
+        );
+
+        $form['couple_address'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Adresse du partenaire:'),
+          '#default_value' => isset($form_state['storage']['couple_address']) ? $form_state['storage']['couple_address'] : null,
+          '#size' => 50,
+          '#maxlength' => 255,
+          '#required' => true
+        );
+
+        $form['couple_postcode'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Code postal du partenaire:'),
+          '#default_value' => isset($form_state['storage']['couple_postcode']) ? $form_state['storage']['couple_postcode'] : null,
+          '#size' => 50,
+          '#maxlength' => 128,
+          '#required' => true
+        );
+
+        $form['couple_city'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Ville du partenaire:'),
+          '#default_value' => isset($form_state['storage']['couple_city']) ? $form_state['storage']['couple_city'] : null,
+          '#size' => 50,
+          '#maxlength' => 128,
+          '#required' => true
+        );
+        
+        $form['couple_registered_last_year'] = array(
+          '#type' => 'radios',
+          '#title' => t("Etiez-vous inscrit l'année dernière?"),
+          '#default_value' => isset($form_state['storage']['couple_registered_last_year']) ? $form_state['storage']['couple_registered_last_year'] : null,
+          '#options' => array(
+              1 => t('Oui'),
+              0 => t('Non')
+          ),
+          '#suffix' => '</div>'
+        );
+      }
+      
+      $form['clear'] = array('#markup' => '<div class="clear"></div>');
+      
+      break;
+      
+    // Payment Method
+    case 5:
+      $form['#prefix'] = '<div id="sj_registration_ajax_form">';
+      
+      $pass = db_select('sj_passes', 'p')
+              ->fields('p', array('price', 'currency'))
+              ->condition('sjp_id', $form_state['storage']['pass_id'])
+              ->execute()
+              ->fetch();
+      
+      $form['payment_method'] = array(
+        '#type' => 'radios',
+        '#prefix' => '<label class="label-title">' . t('Mode de paiement') . '</label>',
+        '#default_value' => isset($form_state['storage']['payment_method']) ? $form_state['storage']['payment_method'] : null,
+        '#options' => array(
+            'paypal' => 'Paypal',
+            'cheque' => 'Chèque'
+        ),
+        '#required' => TRUE
+      );
+      
+      break;
+    case 6:
+      $form['#prefix'] = '<div id="sj_registration_ajax_form">';
+      $is_couple = $form_state['storage']['type'] === 'couple';
+      $registered = $form_state['storage']['registered_last_year'] ? t('Oui') : t('Non');
+      
+      $lessons = db_select('sj_lessons', 'l')
+              ->fields('l', array('name'))
+              ->condition('sjl_id', $form_state['storage']['lessons'], 'IN')
+              ->execute()
+              ->fetchAll();
+      
+      if (!count($lessons)) {
+        drupal_set_message(t('Une erreur est survenue. Contactez l\'administrateur'), 'error');
+      }
+      
+      $pass = db_select('sj_passes', 'p')
+              ->fields('p', array('name', 'price'))
+              ->condition('sjp_id', $form_state['storage']['pass_id'])
+              ->execute()
+              ->fetch();
+      
+      if (!$pass instanceof stdClass) {
+        drupal_set_message(t('Une erreur est survenue. Contactez l\'administrateur'), 'error');
+      }
+      
+      $display_lessons = '';
+      foreach ($lessons as $lesson) {
+        $display_lessons .= $lesson->name . '<br/>';
+      }
+      
+      $form['rundown'] = array(
+          '#markup' => '<div id="sj-registration-rundown">'
+          . '<h3 class="lobster">' . t('Récapitulatif d\'inscription') . '</h3>'
+          . '<table><tbody>'
+          . '<tr><td class="lobster tx-right">' . t('Type') . ':</td><td>' . $form_state['storage']['type'] . '</td></tr>'
+          . '<tr><td class="lobster tx-right">' . t('Genre') . ':</td><td>' . $form_state['storage']['gender'] . '</td></tr>'
+          . '<tr><td class="lobster tx-right">' . t('Niveau') . ':</td><td>' . $form_state['storage']['level'] . '</td></tr>'
+          . '<tr><td class="lobster tx-right">' . t('Pass') . ':</td><td>' . $pass->name . '</td></tr>'
+          . '<tr><td class="lobster tx-right">' . t('Cours') . ':</td><td>' . $display_lessons . '</td></tr>'
+          . '</tbody></table>');
+      
+      $form['rundown']['#markup'] .= '<h3 class="lobster">' . t('Vos coordonnées') . '</h3>'
+          . '<table><tbody>'
+          . '<tr><td class="lobster tx-right">' . t('Prénom') . ':</td><td>' . $form_state['storage']['firstname'] . '</td></tr>'
+          . '<tr><td class="lobster tx-right">' . t('Nom') . ':</td><td>' . $form_state['storage']['lastname'] . '</td></tr>'
+          . '<tr><td class="lobster tx-right">' . t('Adresse email') . ':</td><td>' . $form_state['storage']['email'] . '</td></tr>'
+          . '<tr><td class="lobster tx-right">' . t('Téléphone') . ':</td><td>' . $form_state['storage']['phone'] . '</td></tr>'
+          . '<tr><td class="lobster tx-right">' . t('Code postal') . ':</td><td>' . $form_state['storage']['postcode'] . '</td></tr>'
+          . '<tr><td class="lobster tx-right">' . t('Ville') . ':</td><td>' . $form_state['storage']['city'] . '</td></tr>'
+          . '<tr><td class="lobster tx-right">' . t('Inscrit l\'année dernière') . ':</td><td>' . $registered . '</td></tr>'
+          . '</tbody></table>';
+      
+      if ($is_couple) {
+        $couple_registered = $form_state['storage']['couple_registered_last_year'] ? t('Oui') : t('Non');
+        
+        $form['rundown']['#markup'] .= '<h3 class="lobster">' . t('Coordonnées de votre partenaire') . '</h3>'
+            . '<table><tbody>'
+          . '<tr><td class="lobster tx-right">' . t('Prénom') . ':</td><td>' . $form_state['storage']['couple_firstname'] . '</td></tr>'
+          . '<tr><td class="lobster tx-right">' . t('Nom') . ':</td><td>' . $form_state['storage']['couple_lastname'] . '</td></tr>'
+          . '<tr><td class="lobster tx-right">' . t('Adresse email') . ':</td><td>' . $form_state['storage']['couple_email'] . '</td></tr>'
+          . '<tr><td class="lobster tx-right">' . t('Téléphone') . ':</td><td>' . $form_state['storage']['couple_phone'] . '</td></tr>'
+          . '<tr><td class="lobster tx-right">' . t('Code postal') . ':</td><td>' . $form_state['storage']['couple_postcode'] . '</td></tr>'
+          . '<tr><td class="lobster tx-right">' . t('Ville') . ':</td><td>' . $form_state['storage']['couple_city'] . '</td></tr>'
+          . '<tr><td class="lobster tx-right">' . t('Inscrit l\'année dernière') . ':</td><td>' . $couple_registered . '</td></tr>'
+          . '</tbody></table>';
+      }
+      
+      $form_state['storage']['price'] = 15 + $pass->price;
+      
+      if ($is_couple) {
+        $form_state['storage']['price'] = $form_state['storage']['price'] * 2;
+      }
+      
+      $form['rundown']['#markup'] .= '<h3 class="lobster">' . t('Paiement') . '</h3>'
+              . '<table class="margin-top margin-bottom"><tbody>'
+              . '<tr><td class="lobster tx-right">' . t('Méthode de paiement') . ':</td><td>' . $form_state['storage']['payment_method'] . '</td></tr>'
+              . '<tr><td class="lobster tx-right">' . t('Prix') . ':</td><td>' . $form_state['storage']['price'] . ' ' . $currency . '</td></tr>'
+              . '</tbody></table>';
+  }
+  
+  // Add a wrapper div that will be used by the Form API to update the form using AJAX
+	$form['#suffix'] = '</div>';
+  
+  // Create a container for our buttons
+  $form['buttons'] = array(
+    '#type' => 'container',
+  );
+  
+  // If we are on step 1, we do not want a back button
+  if ($form_state['step'] !== 1) {
+    $form['buttons']['back'] = array(
+      '#type' => 'submit',
+      '#value' => t('Retour'),
+      // Setting #limit_validation_errors to an empty array
+      // ensures that the form fields are not validated when
+      // the back button is used. Otherwise, we will get errors
+      '#limit_validation_errors' => array(),
+      // We need to create a #submit function for this button, or else
+      // #limit_validation_errors has no effect. So we create a submit
+      // function specifically for this submit button.
+      '#submit' => array('sj_registration_ajax_form_back_submit'),
+      '#ajax' => array(
+        // We pass in the wrapper we created at the start of the form
+        'wrapper' => 'sj_registration_ajax_form',
+        // We pass a callback function we will use later to render the form for the user
+        'callback' => 'sj_registration_ajax_form_ajax_callback',
+      ),
+    );
+  }
+  
+  // We only want a forward button if we are not on the last step of the form
+  if ($form_state['step'] !== 6) {
+    $form['buttons']['forward'] = array
+    (
+      '#type' => 'submit',
+      '#value' => t('Suivant'),
+      '#ajax' => array(
+        // We pass in the wrapper we created at the start of the form
+        'wrapper' => 'sj_registration_ajax_form',
+        // We pass a callback function we will use later to render the form for the user
+        'callback' => 'sj_registration_ajax_form_ajax_callback',
+      ),
+    );
+  } else {
+    // We only want a submit button if we are on the last step of the form
+    $form['buttons']['submit'] = array
+    (
+      '#type' => 'submit',
+      '#value' => t('Valider'),
+      '#ajax' => array
+      (
+        // We pass in the wrapper we created at the start of the form
+        'wrapper' => 'sj_registration_ajax_form',
+        // We pass a callback function we will use later to render the form for the user
+        'callback' => 'sj_registration_ajax_form_ajax_callback',
+      ),
+    );
+  }
+
+  return $form;
+}
+
+/**
+ * Implements Registration ajax form hook_validate()
+ *
+ * @param type $form
+ * @param type $form_state 
+ */
+function sj_registration_ajax_form_validate($form, &$form_state)
+{
+	// First we set up a switch for each of our three steps
+	switch($form_state['step']) {
+    case "2":
+      if (!$form_state['values']['pass_id']) {
+        form_set_error('passes', t('Vous devez choisir au moins 1 pass'));
+      }
+      
+      break;
+		case "3":
+      $lessons = sort_chosen_lessons($form_state['values']['lessons']);
+      
+      if (!count($lessons)) {
+        drupal_set_message(t('Vous devez choisir au moins 1 cours'), 'error');
+      } else {
+        $pass = db_select('sj_passes', 'p')
+              ->fields('p', array('sjp_id', 'nb_lessons'))
+              ->condition('sjp_id', $form_state['storage']['pass_id'])
+              ->execute()
+              ->fetch();
+
+        if ($pass->nb_lessons !== 'all' && count($lessons) > $pass->nb_lessons) {
+          // Reset the lessons selected
+          $form_state['storage']['lessons'] = array();
+          $form_state['values']['lessons'] = array();
+
+          form_set_error('lessons', t('Vous devez choisir maximum @nb_lessons cours', array('@nb_lessons' => $pass->nb_lessons)));
+        }
+      }
+      
+			break;
+    case "4":
+      if ($form_state['values']['email'] !== $form_state['values']['second_email']) {
+        form_set_error('second_email', t('Votre email est incorrect.'));
+      } elseif ($form_state['values']['couple_email'] !== $form_state['values']['couple_second_email']) {
+        form_set_error('couple_second_email', t('L\'email de votre partenaire est incorrect.'));
+      }
+      
+      break;
+	}
+}
+
+/**
+ * Validate email address
+ *
+ * @param type $element
+ * @param type $form_state
+ * @param type $form 
+ */
+function myelement_email_validate($element, &$form_state, $form) {
+  $value = $element['#value'];
+  
+  if (!valid_email_address($value)) {
+    form_error($element, t('L\'adresse email fournie est invalide.'));
+  }
+}
+
+/**
+ * Registration ajax form back submit
+ *
+ * @param type $form
+ * @param array $form_state 
+ */
+function sj_registration_ajax_form_back_submit($form, &$form_state) {
+	$form_state['step']--;
+
+	$form_state['rebuild'] = TRUE;
+}
+
+/**
+ * Implements Registration ajax form hook_submit()
+ *
+ * @param type $form
+ * @param type $form_state 
+ */
+function sj_registration_ajax_form_submit($form, &$form_state) {
+  foreach($form_state['values'] as $key => $value) {
+    if ($key === 'lessons') {
+      $form_state['storage']['lessons'] = sort_chosen_lessons($value);
+    } else {
+      $form_state['storage'][$key] = $value;
+    }
+  }
+  
+  // Forward step
+  if(isset($form_state['values']['forward']) && $form_state['values']['op'] == $form_state['values']['forward']) {
+    $form_state['step']++;
+  // Final step submit
+  } elseif(isset($form_state['values']['submit']) && $form_state['values']['op'] == $form_state['values']['submit']) {
+    $payment_method = $form_state['storage']['payment_method'];
+    $waiting_list = $payment_method === 'cheque' ? 1 : 0;
+    
+    // Insert student
+    $student_id = db_insert('sj_students')
+            ->fields(array(
+                'firstname' => $form_state['storage']['firstname'],
+                'lastname' => $form_state['storage']['lastname'],
+                'gender' => $form_state['storage']['gender'],
+                'email' => $form_state['storage']['email'],
+                'phone' => $form_state['storage']['phone'],
+                'address' => $form_state['storage']['address'],
+                'postcode' => $form_state['storage']['postcode'],
+                'city' => $form_state['storage']['city'],
+                'pass_id' => $form_state['storage']['pass_id'],
+                'payment_method' => $form_state['storage']['payment_method'],
+                'waiting_list' => $waiting_list,
+                'registered_last_year' => $form_state['storage']['registered_last_year'],
+                'price' => $form_state['storage']['price'],
+                'currency' => $form_state['storage']['currency'],
+                'created_at' => format_date(time(), 'custom', 'Y-m-d H:i:s')
+            ))
+            ->execute();
+    
+    // Insert couple student
+    if ($form_state['storage']['type'] === 'couple') {
+      $couple_id = db_insert('sj_students')
+            ->fields(array(
+                'firstname' => $form_state['storage']['couple_firstname'],
+                'lastname' => $form_state['storage']['couple_lastname'],
+                'gender' => $form_state['storage']['couple_gender'],
+                'email' => $form_state['storage']['couple_email'],
+                'phone' => $form_state['storage']['couple_phone'],
+                'address' => $form_state['storage']['couple_address'],
+                'postcode' => $form_state['storage']['couple_postcode'],
+                'city' => $form_state['storage']['couple_city'],
+                'pass_id' => $form_state['storage']['pass_id'],
+                'payment_method' => $form_state['storage']['payment_method'],
+                'waiting_list' => $waiting_list,
+                'couple_id' => $student_id,
+                'created_at' => format_date(time(), 'custom', 'Y-m-d H:i:s')
+          ))
+          ->execute();
+
+      $update = db_update('sj_students')
+              ->condition('sjs_id', $student_id)
+              ->fields(array('couple_id' => $couple_id))
+              ->execute();
+
+    }
+
+    // Insert relation lessons with students
+    $lessons = sort_chosen_lessons($form_state['storage']['lessons']);
+    foreach ($lessons as $lesson_id) {
+      $lesson = db_select('sj_lessons', 'l')
+              ->fields('l')
+              ->condition('l.sjl_id', $lesson_id)
+              ->execute()
+              ->fetch();
+
+      $is_full = check_lesson_full($lesson, $form_state['storage']['gender'], $form_state['storage']['type']);
+
+      $query = db_insert('sj_students_lessons')
+            ->fields(array(
+                'sj_student_id' => $student_id,
+                'sj_lesson_id' => $lesson_id,
+                'option_list' => $is_full,
+                'created_at' => format_date(time(), 'custom', 'Y-m-d H:i:s')
+            ))
+            ->execute();
+
+      if (isset($couple_id)) {
+        $query = db_insert('sj_students_lessons')
+              ->fields(array(
+                  'sj_student_id' => $couple_id,
+                  'sj_lesson_id' => $lesson_id,
+                  'option_list' => $is_full,
+                  'created_at' => format_date(time(), 'custom', 'Y-m-d H:i:s')
+              ))
+              ->execute();
+      }
+
+      // Automatically register one on option_list if any
+      if (!$is_full) {
+        $opposite_gender = $form_state['storage']['gender'] === 'masculin' ? 'féminin' : 'masculin';
+        $opposite_gender_is_full = check_lesson_full($lesson, $opposite_gender, $form_state['storage']['type']);
+
+        if ($opposite_gender_is_full) {
+          $query = db_query("UPDATE {sj_students_lessons} sl SET sl.option_list = :false 
+              WHERE sl.sj_lesson_id = :lesson_id AND sl.option_list = :true 
+              ORDER BY sl.created_at ASC LIMIT 1;", array(
+                  ':false' => 0,
+                  ':lesson_id' => $lesson->sjl_id,
+                  ':true' => 1
+          ));
+        }
+      }
+    }
+    
+    if ($form_state['storage']['payment_method'] === 'paypal') {
+      $path = 'paiement_par_paypal';
+    } elseif ($form_state['storage']['payment_method'] === 'cheque') {
+      $path = 'paiement_par_cheque';
+    }
+    
+    // In your ajax form submit callback
+    ctools_include('ajax');
+    ctools_add_js('ajax-responder');
+    // Path to redirect to
+    $commands[] = ctools_ajax_command_redirect($path);
+    // you can also use ctools_ajax_command_reload() –  xurshid29
+    print ajax_render($commands);
+    drupal_exit();
+  }
+  
+  // As in ajax_form_multistep_form_back_submit(), we need to set
+  // $form_state['rebuild'] to TRUE, in able to ensure that our
+  // our form is rebuilt, allowing for the multi-step process
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * Registration ajax form ajax callback
+ *
+ * @param type $form
+ * @param type $form_state
+ * @return type 
+ */
+function sj_registration_ajax_form_ajax_callback($form, &$form_state)
+{
+	return $form;
+}
+
+/**
+ * Sort lessons chosen by user
+ *
+ * @param array $lessons
+ * @return array 
+ */
+function sort_chosen_lessons($lessons) {
+  $result = array();
+  
+  foreach ($lessons as $lesson_id) {
+    if ($lesson_id) {
+      $result[] = $lesson_id;
+    }
+  }
+  
+  return $result;
+}
+
+/**
+ * Get season year
+ *
+ * @return type 
+ */
+function get_season_year() {
+  return variable_get('sj_registration_season_year', null);
+}
+
+/**
+ * Get filter year
+ *
+ * @return type 
+ */
+function get_filter_year() {
+  return variable_get('sj_registration_filter_year', null);
+}
+
+/**
+ * Count the availability of a lesson by gender
+ *
+ * @param stdClass $lesson
+ * 
+ * @return array $result
+ */
+function check_availability($lesson) {
+  if (!$lesson instanceof stdClass) {
+    drupal_set_message(t('Erreur dans le calcul des places restantes pour un cours. Contactez l\'administrateur'));
+    return null;
+  }
+  
+  $query = db_select('sj_students', 's');
+  $query->leftJoin('sj_students_lessons', 'sl', 'sl.sj_student_id = s.sjs_id');
+
+  $students = $query->fields('s', array('sjs_id', 'payment_method', 'waiting_list', 'gender'))
+          ->condition('sl.sj_lesson_id', $lesson->sjl_id)
+          ->condition('s.enabled', true)
+          ->execute()
+          ->fetchAll();
+
+  $result = array(
+      'leader' => array('count' => 0, 'availability' => 0, 'waiting_list' => 0 , 'cheque' => 0),
+      'follower' => array('count' => 0, 'availability' => 0, 'waiting_list' => 0 , 'cheque' => 0)
+  );
+
+  if (count($students)) {
+    foreach ($students as $student) {
+      if ($student->gender === 'masculin') {
+        $result['leader']['count']++;
+        
+        if ($student->payment_method === 'cheque') {
+          $result['leader']['cheque']++;
+        }
+        
+        if ($student->waiting_list) {
+          $result['leader']['waiting_list']++;
+        }
+      } else {
+        $result['follower']['count']++;
+        
+        if ($student->payment_method === 'cheque') {
+          $result['follower']['cheque']++;
+        }
+        
+        if ($student->waiting_list) {
+          $result['follower']['waiting_list']++;
+        }
+      }
+    }
+  }
+  
+  if ($lesson->type === 'solo') {
+    $result['leader']['count'] = $result['leader']['count'] + $result['follower']['count'];
+    $result['leader']['cheque'] = $result['leader']['cheque'] + $result['follower']['cheque'];
+    $result['leader']['waiting_list'] = $result['leader']['waiting_list'] + $result['follower']['waiting_list'];
+  }
+  
+  $result['leader']['availability'] = $lesson->max_capacity_leader - $result['leader']['count']; 
+  $result['follower']['availability'] = $lesson->max_capacity_follower - $result['follower']['count'];
+
+  return $result;
+}
+
+/**
+ * Check if lesson is full
+ *
+ * @param stdClass $lesson
+ * @param string $gender
+ * @param boolean $is_couple
+ * 
+ * @return boolean 
+ */
+function check_lesson_full($lesson, $gender, $type) {
+  if (!count(!$lesson instanceof stdClass)) {
+    drupal_set_message(t('Erreur la vérification des places d\'un cours. Contactez l\'administrateur'));
+    
+    return 0;
+  }
+  
+  if ($type === 'couple') {
+    return 0;
+  }
+  
+  $is_leader = $gender === 'masculin';
+  $lesson_datas = check_availability($lesson);
+  
+  $diff = $lesson_datas['leader']['count'] - $lesson_datas['follower']['count'];
+  $result = (abs($diff) > 3 && ($is_leader && $diff > 0) || (!$is_leader && $diff < 0)) ? 1 : 0;
+  
+  return $result;
+}
+
+/**
+ * Return currency symbole
+ *
+ * @param string $currency
+ * @return string 
+ */
+function currency_symbole($currency) {
+  switch($currency) {
+    case 'EUR':
+      return '€';
+      break;
+    case 'USD':
+      return '$';
+      break;
+  }
+}

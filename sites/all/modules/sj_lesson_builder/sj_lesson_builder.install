@@ -1,0 +1,131 @@
+<?php
+
+/**
+ * @file
+ * Swing Jammerz Lesson Builder module's install and uninstall code.
+ */
+
+/**
+ * Implementation of hook_schema().
+ */
+function sj_lesson_builder_schema() {
+  $schema['sj_lessons'] = array(
+    'description' => "Stores lessons.",
+    'fields' => array(
+      'sjl_id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Unique identifier for a lesson item.'
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "The name of the lesson.",
+        'translatable' => TRUE
+      ),
+      'type' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "The type of lesson.",
+        'translatable' => TRUE
+      ),
+      'day' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "The day of lesson.",
+        'translatable' => TRUE
+      ),
+      'time' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => '',
+        'description' => "The time of lesson."
+      ),
+      'level' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "The level of lesson.",
+        'translatable' => TRUE
+      ),
+      'place' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => '',
+        'description' => "The place of lesson.",
+        'translatable' => TRUE
+      ),
+      'max_capacity_leader' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => "The max capacity of leader in the lesson."
+      ),
+      'max_capacity_follower' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => "The max capacity of follower in the lesson."
+      ),
+      'capacity_leader' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => "The available capacity of leader in the lesson."
+      ),
+      'capacity_follower' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => "The available capacity of follower in the lesson."
+      ),
+      'enabled' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+        'description' => "The available capacity of follower in the lesson."
+      ),
+      'full' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => "The available capacity of follower in the lesson."
+      ),
+      'language' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => 'fr',
+        'description' => "Language."
+      ),
+      'year' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '2014',
+        'description' => "The year of the lesson."
+      ),
+    ),
+    'primary key' => array('sjl_id'),
+  );
+  
+  return $schema;
+}

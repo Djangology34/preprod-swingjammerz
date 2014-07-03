@@ -1,0 +1,456 @@
+<?php
+
+/**
+ * @file
+ * Swing Jammerz Registration module's install and uninstall code.
+ */
+
+/**
+ * Implementation of hook_schema().
+ */
+function sj_registration_schema() {
+  $schema['sj_lessons'] = array(
+    'description' => "Stores lessons.",
+    'fields' => array(
+      'sjl_id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Unique identifier for a lesson item.'
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "The name of the lesson.",
+        'translatable' => TRUE
+      ),
+      'description' => array(
+        'type' => 'text',
+        'description' => "The description of the lesson.",
+        'translatable' => TRUE
+      ),
+      'event' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "What event is it.",
+        'translatable' => TRUE
+      ),
+      'type' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "The type of lesson.",
+        'translatable' => TRUE
+      ),
+      'day' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "The day of lesson.",
+        'translatable' => TRUE
+      ),
+      'time' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => '',
+        'description' => "The time of lesson."
+      ),
+      'level' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "The level of lesson.",
+        'translatable' => TRUE
+      ),
+      'place_id' => array(
+        'type' => 'int',
+        'size' => 'normal',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Unique identifier for a place item.'
+      ),
+      'max_capacity_leader' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => "The max capacity of leader in the lesson."
+      ),
+      'max_capacity_follower' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => "The max capacity of follower in the lesson."
+      ),
+      'enabled' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+        'description' => "The available capacity of follower in the lesson."
+      ),
+      'full' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => "The available capacity of follower in the lesson."
+      ),
+      'language' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => 'fr',
+        'description' => "Language."
+      ),
+      'year' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => "The year of the lesson."
+      ),
+    ),
+    'primary key' => array('sjl_id'),
+    'foreign keys' => array(
+      'fk_student_pass' => array('table' => 'sj_places', 'columns' => array('place_id' => 'id')),
+    )
+  );
+  
+  $schema['sj_students'] = array(
+    'description' => "Stores students.",
+    'fields' => array(
+      'sjs_id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Unique identifier for a student item.'
+      ),
+      'firstname' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "The firstname of the student."
+      ),
+      'lastname' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "The lastname of the student."
+      ),
+      'gender' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "The gender of the student.",
+        'translatable' => TRUE
+      ),
+      'email' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "The email of the student."
+      ),
+      'phone' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => '',
+        'description' => "The phone of the student."
+      ),
+      'address' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "The address of the student."
+      ),
+      'postcode' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => '',
+        'description' => "The postcode of the student."
+      ),
+      'city' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => '',
+        'description' => "The city of the student."
+      ),
+      'pass_id' => array(
+        'type' => 'int',
+        'size' => 'normal',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => "The pass the student bought."
+      ),
+      'payed' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => "Has the student payed."
+      ),
+      'payment_method' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => '',
+        'description' => "The payment method of student."
+      ),
+      'waiting_list' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => "Is the student on waiting list."
+      ),
+      'registered_last_year' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => "Was the student registered last year."
+      ),
+      'couple_id' => array(
+        'type' => 'int',
+        'size' => 'normal',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'description' => "The couple id of the student if there is."
+      ),
+      'price' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "The price payed by the student."
+      ),
+      'currency' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => 'EUR',
+        'description' => "The currency of payment."
+      ),
+      'enabled' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+        'description' => "Is the student enabled."
+      ),
+      'language' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => 'fr',
+        'description' => "Language."
+      ),
+      'created_at' => array(
+        'description' => 'The creation date timestamp.',
+        'mysql_type' => 'DATETIME',
+        'not null' => TRUE
+      ),
+    ),
+    'primary key' => array('sjs_id'),
+    'foreign keys' => array(
+      'fk_student_pass' => array('table' => 'sj_passes', 'columns' => array('pass_id' => 'sjp_id')),
+      'fk_student_student' => array('table' => 'sj_students', 'columns' => array('couple_id' => 'sjs_id'))
+    )
+  );
+  
+  $schema['sj_passes'] = array(
+    'description' => "Stores passes.",
+    'fields' => array(
+      'sjp_id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Unique identifier for a pass item.'
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => "The name of the pass.",
+        'default' => '',
+        'translatable' => TRUE
+      ),
+      'price' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "The price of the pass."
+      ),
+      'currency' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => 'EUR',
+        'description' => "The currency of the pass."
+      ),
+      'year' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => "The year of the pass."
+      ),
+      'nb_lessons' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => 1,
+        'description' => "The number of lessons allowed by the pass."
+      ),
+      'enabled' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+        'description' => "The available capacity of follower in the lesson."
+      ),
+      'created_at' => array(
+        'description' => t('The creation date timestamp.'),
+        'mysql_type' => 'DATETIME',
+        'not null' => TRUE
+      ),
+    ),
+    'primary key' => array('sjp_id')
+  );
+  
+  $schema['sj_students_lessons'] = array(
+    'description' => "Stores relation between students and lessons.",
+    'fields' => array(
+      'sj_student_id' => array(
+        'type' => 'int',
+        'size' => 'normal',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Unique identifier for a student item.'
+      ),
+      'sj_lesson_id' => array(
+        'type' => 'int',
+        'size' => 'normal',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Unique identifier for a lesson item.'
+      ),
+      'option_list' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => "Is the student on option list."
+      ),
+      'created_at' => array(
+        'description' => t('The creation date timestamp.'),
+        'mysql_type' => 'DATETIME',
+        'not null' => TRUE
+      ),
+    ),
+    'foreign keys' => array(
+      'fk_student' => array('table' => 'sj_students', 'columns' => array('sj_student_id' => 'sjs_id')),
+      'fk_lesson'  => array('table' => 'sj_lessons', 'columns' => array('sj_lesson_id' => 'sjl_id'))
+    )
+  );
+  
+  $schema['sj_places'] = array(
+    'description' => "Stores places.",
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Unique identifier for a place item.'
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The name of the place.'
+      ),
+      'address' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'default' => '',
+        'description' => 'The address of the place.'
+      ),
+      'postcode' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => '',
+        'description' => "The postcode of the student."
+      ),
+      'city' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => '',
+        'description' => "The city of the student."
+      ),
+      'latitude' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "The latitude of the place."
+      ),
+      'longitude' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "The longitude of the place.",
+        'translatable' => TRUE
+      ),
+      'enabled' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+        'description' => "Enabled or disabled."
+      ),
+      'year' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'The year of the place.'
+      ),
+      'created_at' => array(
+        'description' => 'The creation date timestamp.',
+        'mysql_type' => 'DATETIME',
+        'not null' => TRUE
+      ),
+    ),
+    'primary key' => array('id')
+  );
+  
+  return $schema;
+}

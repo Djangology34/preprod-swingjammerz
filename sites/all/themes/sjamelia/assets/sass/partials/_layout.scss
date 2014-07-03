@@ -1,0 +1,87 @@
+//
+// Styles for main layout
+// --------------------------------------------------
+
+@import "zen";
+
+$box-sizing-polyfill-path: "/scripts/polyfills/boxsizing.htc";
+
+$zen-column-count:  12;
+$zen-gutter-width:  32px;
+$zen-gutter-method: padding !default;
+
+.main-wrapper {
+  @include zen-grid-container();  // Define the container for your grid items.
+}
+
+/**
+ * For smaller screens and larger screen
+ */
+@media all and (min-width: 480px) {
+
+  // Three columns element
+  $zen-column-count: 3;
+
+  .three-columns {
+    .first {
+      @include zen-grid-item(1, 1);
+    }
+
+    .second {
+      @include zen-grid-item(1, 2);
+    }
+
+    .third {
+      @include zen-grid-item(1, 3);
+    }
+  }
+
+  // Two columns element
+  $zen-column-count: 2;
+
+  .two-columns {
+    .first {
+      @include zen-grid-item(1, 1);
+    }
+
+    .second {
+      @include zen-grid-item(1, 2);
+    }
+  }
+}
+
+/**
+ * For smaller screens
+ */
+@media all and (max-width: 480px) {
+
+  // Three columns element
+  $zen-column-count: 2;
+
+  .three-columns {
+    .first {
+      @include zen-grid-item(1, 1);
+    }
+
+    .second {
+      @include zen-grid-item(1, 2);
+    }
+
+    .third {
+      @include zen-grid-item(1, 1);
+    }
+  }
+
+  // Two columns element
+  $zen-column-count: 2;
+
+  .two-columns {
+    .first {
+      @include zen-grid-item(1, 1);
+    }
+
+    .second {
+      @include zen-grid-item(1, 2);
+    }
+  }
+}

@@ -1,0 +1,7 @@
+name = Module SwingJammerz Google Maps Module
+description = Module showing a block with a google maps showing all location for lessons
+core = 7.x
+package = Swing Jammerz
+files[] = sj_gmaps.module
+dependencies[] = sj_registration
+stylesheets[all][] = css/gmaps.css
