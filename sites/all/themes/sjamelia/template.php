@@ -35,3 +35,13 @@ function sjamelia_preprocess_page(&$variables) {
     $variables['copyright'] = check_markup($copyright['value'], $copyright['format']);
   }
 }
+
+/**
+ * Implements template_process_page().
+ */
+function sjamelia_process_page(&$variables) {
+  
+  if(isset($variables['node']) && $variables['node'] instanceof stdClass && $variables['node']->field_hide_title['fr'][0]['value']) {
+    $variables['title'] = NULL;
+  }
+}

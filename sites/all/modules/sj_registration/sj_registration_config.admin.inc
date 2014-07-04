@@ -18,13 +18,21 @@ function sj_registration_admin()
   
   $content = '<h1 class="center">Interface d\'admninistration des cours</h1><br/>';
   
-  $content .= '<a href="/admin/config/sj_registration/stage">' . t('Aller à la page des stages') . '</a><br/>';
+  $content .= '<a href="/admin/config/sj_registration/stage">' . t('Aller à la page des stages') . '</a><br/><br/>';
   
   $content .= 'Année actuelle: <b>' . variable_get('sj_registration_season_year', null)
           . '</b> - <a href="/admin/config/sj_registration/season/edit">' . t('Modifier') . '</a><br/>';
   
   $content .= 'Année de filtrage: <b>' . variable_get('sj_registration_filter_year', null)
           . '</b> - <a href="/admin/config/sj_registration/filter/edit">' . t('Modifier') . '</a><br/>';
+  
+  $content .= 'Prix de l\'adhésion: <b>' . variable_get('sj_registration_fee', null)
+          . ' €</b> - <a href="/admin/config/sj_registration/registration_fee/edit">' . t('Modifier') . '</a><br/>';
+  
+  $content .= 'Inscription: <b>' . get_registration_settings(true) . '</b>'
+          . ' - <a href="/admin/config/sj_registration/settings/edit">' . t('Modifier') . '</a><br/>'
+          . 'Paiement en ligne: <b>' . get_registration_payment(true) . '</b>'
+          . ' - <a href="/admin/config/sj_registration/settings/edit">' . t('Modifier') . '</a><br/>';
   
   $content .= render_places();
   $content .= render_passes();

@@ -52,6 +52,23 @@ function sj_registration_menu() {
     'access arguments' => array('administer site configuration')
   );
   
+  // Registration Management
+  $items['admin/config/sj_registration/registration_fee/edit'] = array(
+    'title' => t('Swing Jammerz - Editer l\'adhésion'),
+    'description' => 'Swing Jammerz - Editer l\'adhésion',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sj_registration_fee_admin_form'),
+    'access arguments' => array('administer site configuration')
+  );
+  
+  $items['admin/config/sj_registration/settings/edit'] = array(
+    'title' => t('Swing Jammerz - Activer/Désactiver les inscriptions'),
+    'description' => 'Swing Jammerz - Activer/Désactiver les inscriptions',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sj_registration_settings_admin_form'),
+    'access arguments' => array('administer site configuration')
+  );
+  
   // Pass Management
   $items['admin/config/sj_registration/pass/new'] = array(
     'title' => t('Swing Jammerz - Créer un pass'),
@@ -190,7 +207,7 @@ function sj_registration_season_admin_submit($form, &$form_state) {
   $value = $form_state['values']['season_year'];
   
   variable_set('sj_registration_season_year', $value);
-  drupal_set_message('Année actuel mise à jour à ' . $value);
+  drupal_set_message(t('Année actuel mise à jour à @year'), array('@year' => $value));
   
   drupal_goto('/admin/config/sj_registration');
 }
@@ -223,7 +240,7 @@ function sj_registration_filter_admin_form($form, &$form_state) {
 }
 
 /**
- * Season save in config variables hook_submit()
+ * Filter save in config variables hook_submit()
  *
  * @param type $form
  * @param type $form_state 
@@ -232,7 +249,96 @@ function sj_registration_filter_admin_submit($form, &$form_state) {
   $value = $form_state['values']['filter_year'];
   
   variable_set('sj_registration_filter_year', $value);
-  drupal_set_message('Année du filtre mise à jour à ' . $value);
+  drupal_set_message(t('Année du filtre mise à jour à @year'), array('@year' => $value));
+  
+  drupal_goto('/admin/config/sj_registration');
+}
+
+// Edit Registration
+
+/**
+ * Edit current registration fee hook_form()
+ *
+ * @param type $form
+ * @param type $form_state
+ * 
+ * @return array $form 
+ */
+function sj_registration_fee_admin_form($form, &$form_state) {
+  $form['registration_fee'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Adhésion'),
+    '#default_value' => get_registration_fee(),
+    '#size' => 50,
+    '#maxlength' => 128,
+    '#required' => true
+  );
+  
+  $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => 'Mettre à jour',
+      '#submit' => array('sj_registration_fee_admin_submit'),
+  );
+ 
+  return $form;
+}
+
+/**
+ * Registration fee save in config variables hook_submit()
+ *
+ * @param type $form
+ * @param type $form_state 
+ */
+function sj_registration_fee_admin_submit($form, &$form_state) {
+  $value = $form_state['values']['registration_fee'];
+  
+  variable_set('sj_registration_fee', $value);
+  drupal_set_message(t('Frais d\'adhésion mis à jour à @fee €'), array('@fee' => $value));
+  
+  drupal_goto('/admin/config/sj_registration');
+}
+
+/**
+ * Edit registration settings fee hook_form()
+ *
+ * @param type $form
+ * @param type $form_state
+ * 
+ * @return array $form 
+ */
+function sj_registration_settings_admin_form($form, &$form_state) {
+  $form['registration_settings'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Activer/Désactiver les inscriptions'),
+    '#default_value' => get_registration_settings()
+  );
+  
+  $form['registration_payment'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Activer/Désactiver le paiement en ligne pour les inscriptions'),
+    '#default_value' => get_registration_payment()
+  );
+  
+  $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => 'Mettre à jour',
+      '#submit' => array('sj_registration_settings_admin_submit'),
+  );
+ 
+  return $form;
+}
+
+/**
+ * Registration settings save in config variables hook_submit()
+ *
+ * @param type $form
+ * @param type $form_state 
+ */
+function sj_registration_settings_admin_submit($form, &$form_state) {
+  variable_set('sj_registration_settings', $form_state['values']['registration_settings']);
+  variable_set('registration_payment', $form_state['values']['registration_payment']);
+  
+  drupal_set_message(t('L\' inscription est @settings - Le paiement en ligne est @payment'), array('@settings' => get_registration_settings(true), '@payment' => get_registration_payment(true)));
   
   drupal_goto('/admin/config/sj_registration');
 }
@@ -356,6 +462,10 @@ function sj_registration_view() {
     $text = str_replace('{lessons}', $list, $text);
   }
   
+  if (get_registration_settings()) {
+    $text .= '<a class="btn" href="/inscription"><button class="btn btn-danger center-block btn-lg" type="button">Inscription</button></a>';
+  }
+  
   // Block output in HTML with div wrapper
   $block = array(
     'message' => array(
@@ -460,6 +570,11 @@ function generate_buttons(array $form, $element, $style = array('default')) {
  * @return array 
  */
 function sj_registration_ajax_form($form, &$form_state) {
+  if (!get_registration_settings()) {
+    drupal_set_message(t('La page que vous essayez d\'attendre est inaccessible'), 'error');
+    drupal_goto('');
+  }
+  
   drupal_add_js(drupal_get_path('module', 'sj_registration') .'/js/sj_registration.js');
   
   // Get passes
@@ -484,10 +599,10 @@ function sj_registration_ajax_form($form, &$form_state) {
       
       if (!isset($form_state['storage']['form-pricer'])) {
         $form['#prefix'] .= '<div id="registration-form-pricer"><h3 class="no-margin">' . t('Calcul du prix') . '</h3>'
-                . '( <span id="price-first" class="pointer" title="' . t('Adhésion') . '">' . $currency . ' 15</span>'
+                . '( <span id="price-first" class="pointer" title="' . t('Adhésion') . '">' . $currency . ' ' . get_registration_fee() . '</span>'
                 . ' + ' . $currency . ' <span id="price-pass" class="pointer" data-price="0">0</span> )'
                 . ' x <span id="price-type" class="pointer" title="' . t('Seul') . '" data-value="1">1</span>'
-                . ' = <span id="price-total" class="pointer" title="' . t('Total') . '">15</span><span> ' . $currency . '</span></span></div>'
+                . ' = <span id="price-total" class="pointer" title="' . t('Total') . '">' . get_registration_fee() . '</span><span> ' . $currency . '</span></span></div>'
                 . '<div id="registration-form-pricer-wrapper"></div>';
         
         $form_state['storage']['form-pricer'] = true;
@@ -495,7 +610,7 @@ function sj_registration_ajax_form($form, &$form_state) {
       
       $form['#prefix'] .= '<div id="sj_registration_ajax_form">';
       $form['#prefix'] .= '<div class="intro"><p>' . t('Bienvenue sur la page d\'inscription des Swing Jammerz.')
-            . '</p><p>' . t('Les Swing Jammerz étant une association, il est nécessaire d\'y adhérer afin de pouvoir s\'inscrire aux cours. Le prix de l\'adhésion est de 15€.')
+            . '</p><p>' . t('Les Swing Jammerz étant une association, il est nécessaire d\'y adhérer afin de pouvoir s\'inscrire aux cours. Le prix de l\'adhésion est de @registration_fee €.', array('@registration_fee' => get_registration_fee()))
             . '</p></div>';
       
       $form['type'] = array(
@@ -550,7 +665,7 @@ function sj_registration_ajax_form($form, &$form_state) {
       if (!$passes && !count($passes)) {
         drupal_set_message(t('Formulaire d\'inscription momentanément indisponible...'), 'error');
         
-        drupal_goto('/');
+        drupal_goto('');
       }
       
       $options = array();
@@ -597,7 +712,7 @@ function sj_registration_ajax_form($form, &$form_state) {
       if(!$pass) {
         drupal_set_message(t('Formulaire d\'inscription momentanément indisponible...'), 'error');
         
-        drupal_goto('/');
+        drupal_goto('');
       }
       
       // Check availability for lessons
@@ -925,7 +1040,7 @@ function sj_registration_ajax_form($form, &$form_state) {
           . '</tbody></table>';
       }
       
-      $form_state['storage']['price'] = 15 + $pass->price;
+      $form_state['storage']['price'] = intval(get_registration_fee()) + $pass->price;
       
       if ($is_couple) {
         $form_state['storage']['price'] = $form_state['storage']['price'] * 2;
@@ -1250,7 +1365,7 @@ function sort_chosen_lessons($lessons) {
 /**
  * Get season year
  *
- * @return type 
+ * @return string 
  */
 function get_season_year() {
   return variable_get('sj_registration_season_year', null);
@@ -1259,10 +1374,53 @@ function get_season_year() {
 /**
  * Get filter year
  *
- * @return type 
+ * @return string 
  */
 function get_filter_year() {
   return variable_get('sj_registration_filter_year', null);
+}
+
+/**
+ * Get registration fee
+ *
+ * @return string 
+ */
+function get_registration_fee() {
+  return variable_get('sj_registration_fee', null);
+}
+
+/**
+ * Get registration settings
+ *
+ * @param boolean $return_string
+ * 
+ * @return string 
+ */
+function get_registration_settings($return_string = false) {
+  $settings = variable_get('sj_registration_settings', null);
+  
+  if ($return_string) {
+    $settings = $settings ? 'Activée' : 'Désactivée';
+  }
+  
+  return $settings;
+}
+
+/**
+ * Get registration payment
+ *
+ * @param boolean $return_string
+ * 
+ * @return string 
+ */
+function get_registration_payment($return_string = false) {
+  $payment = variable_get('registration_payment', null);
+  
+  if ($return_string) {
+    $payment = $payment ? 'Activé' : 'Désactivé';
+  }
+  
+  return $payment;
 }
 
 /**
