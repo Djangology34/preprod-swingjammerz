@@ -11626,6 +11626,8 @@ form { padding: 12px 0 36px; }
 
 .one-column { width: 50%; margin: auto; }
 
+.red { color: #911821; }
+
 /* Page */
 .field-name-body { margin: 52px; }
 
@@ -11677,7 +11679,7 @@ form { padding: 12px 0 36px; }
 #registration-form-pricer-wrapper { width: 305px; height: 100px; position: fixed; right: 0px; top: 52px; ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=60)"; filter: alpha(opacity=60); opacity: 0.6; z-index: 50; background-color: #FFFFFF; }
 #registration-form-pricer { text-align: center; position: fixed; min-width: 305px; right: 0px; top: 60px; z-index: 60; font-size: 24px !important; }
 
-#sj-registration-rundown table { width: 75%; margin: auto; }
+#sj-registration-rundown table { width: 80%; margin: auto; }
 #sj-registration-rundown table td { width: 50%; }
 
 .lesson-option-list { background: url('../images/lesson_full.png') no-repeat; width: 100px; height: 90px; display: block; position: absolute; bottom: 25px; left: 135px; }

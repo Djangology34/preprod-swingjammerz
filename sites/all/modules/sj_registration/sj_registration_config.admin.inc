@@ -20,14 +20,17 @@ function sj_registration_admin()
   
   $content .= '<a href="/admin/config/sj_registration/stage">' . t('Aller à la page des stages') . '</a><br/><br/>';
   
-  $content .= 'Année actuelle: <b>' . variable_get('sj_registration_season_year', null)
+  $content .= 'Année actuelle: <b>' . get_season_year()
           . '</b> - <a href="/admin/config/sj_registration/season/edit">' . t('Modifier') . '</a><br/>';
   
-  $content .= 'Année de filtrage: <b>' . variable_get('sj_registration_filter_year', null)
+  $content .= 'Année de filtrage: <b>' . get_filter_year()
           . '</b> - <a href="/admin/config/sj_registration/filter/edit">' . t('Modifier') . '</a><br/>';
   
-  $content .= 'Prix de l\'adhésion: <b>' . variable_get('sj_registration_fee', null)
-          . ' €</b> - <a href="/admin/config/sj_registration/registration_fee/edit">' . t('Modifier') . '</a><br/>';
+  $content .= 'Devise: <b>' . get_currency() . '</b>'
+          . ' - <a href="/admin/config/sj_registration/currency/edit">' . t('Modifier') . '</a><br/>';
+  
+  $content .= 'Prix de l\'adhésion: <b>' . get_registration_fee() . ' ' . get_currency(true)
+          . '</b> - <a href="/admin/config/sj_registration/registration_fee/edit">' . t('Modifier') . '</a><br/>';
   
   $content .= 'Inscription: <b>' . get_registration_settings(true) . '</b>'
           . ' - <a href="/admin/config/sj_registration/settings/edit">' . t('Modifier') . '</a><br/>'
@@ -167,6 +170,7 @@ function render_lessons($event = 'cours') {
           . '<th>' . t('Heure') . '</th>'
           . '<th>' . t('Niveau') . '</th>'
           . '<th>' . t('Lieu') . '</th>'
+          . '<th>' . t('Frais d\'adhésion') . '</th>'
           . '<th>' . t('Places max cavalier') . '</th>'
           . '<th>' . t('Places max cavalière') . '</th>'
           . '<th>' . t('Places restantes cavalier') . '</th>'
@@ -193,6 +197,8 @@ function render_lessons($event = 'cours') {
             ->execute()
             ->fetch();
     
+    $lesson_fee = $lesson->fee ? $lesson->fee : '0';
+    
     $content .= '<tr>'
             . '<td>' . $lesson->sjl_id . '</td>'
             . '<td>' . $lesson->name . '</td>'
@@ -202,6 +208,7 @@ function render_lessons($event = 'cours') {
             . '<td>' . $lesson->time . '</td>'
             . '<td>' . $lesson->level . '</td>'
             . '<td>' . $place->name . '</td>'
+            . '<td>' . $lesson_fee . ' ' . get_currency(true) . '</td>'
             . '<td>' . $lesson->max_capacity_leader . '</td>'
             . '<td>' . $lesson->max_capacity_follower . '</td>'
             . '<td><span class="tipsy underlined pointer" title="nb d\'inscrits: ' . $lesson_datas['leader']['count'] . ' - paiement par cheque: ' . $lesson_datas['leader']['cheque'] . ' - liste d\'attente: ' . $lesson_datas['leader']['waiting_list'] . '"><b>' . $lesson_datas['leader']['availability'] . '</b></span></td>'

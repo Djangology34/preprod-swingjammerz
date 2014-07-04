@@ -121,6 +121,14 @@ function sj_registration_lesson_admin_form($form, &$form_state, $id = null) {
     '#required' => TRUE
   );
   
+  $form['fee'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Frais d\' adhésion pour au cours'),
+      '#default_value' => $lesson instanceof stdClass ? $lesson->fee : null,
+      '#size' => 50,
+      '#maxlength' => 128
+    );
+  
   $form['max_capacity_leader'] = array(
     '#type' => 'textfield',
     '#title' => t('Nombre de places maximum cavalier'),
@@ -238,6 +246,7 @@ function sj_registration_lesson_admin_submit($form, &$form_state) {
       'time' => $values['time'],
       'level' => $values['level'],
       'place_id' => $values['place_id'],
+      'fee' => $values['fee'],
       'max_capacity_leader' => $values['max_capacity_leader'],
       'max_capacity_follower' => $values['max_capacity_follower'],
       'enabled' => $values['enabled'],

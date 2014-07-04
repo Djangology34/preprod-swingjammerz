@@ -52,7 +52,7 @@ function sj_registration_menu() {
     'access arguments' => array('administer site configuration')
   );
   
-  // Registration Management
+  // Registration Settings Management
   $items['admin/config/sj_registration/registration_fee/edit'] = array(
     'title' => t('Swing Jammerz - Editer l\'adhésion'),
     'description' => 'Swing Jammerz - Editer l\'adhésion',
@@ -66,6 +66,14 @@ function sj_registration_menu() {
     'description' => 'Swing Jammerz - Activer/Désactiver les inscriptions',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('sj_registration_settings_admin_form'),
+    'access arguments' => array('administer site configuration')
+  );
+  
+  $items['admin/config/sj_registration/currency/edit'] = array(
+    'title' => t('Swing Jammerz - Editer la devise'),
+    'description' => 'Swing Jammerz - Editer la devise',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sj_registration_currency_admin_form'),
     'access arguments' => array('administer site configuration')
   );
   
@@ -293,7 +301,7 @@ function sj_registration_fee_admin_submit($form, &$form_state) {
   $value = $form_state['values']['registration_fee'];
   
   variable_set('sj_registration_fee', $value);
-  drupal_set_message(t('Frais d\'adhésion mis à jour à @fee €'), array('@fee' => $value));
+  drupal_set_message(t('Frais d\'adhésion mis à jour à @fee @currency'), array('@fee' => $value, '@currency' => get_currency(true)));
   
   drupal_goto('/admin/config/sj_registration');
 }
@@ -339,6 +347,48 @@ function sj_registration_settings_admin_submit($form, &$form_state) {
   variable_set('registration_payment', $form_state['values']['registration_payment']);
   
   drupal_set_message(t('L\' inscription est @settings - Le paiement en ligne est @payment'), array('@settings' => get_registration_settings(true), '@payment' => get_registration_payment(true)));
+  
+  drupal_goto('/admin/config/sj_registration');
+}
+
+/**
+ * Edit currency hook_form()
+ *
+ * @param type $form
+ * @param type $form_state
+ * 
+ * @return array $form 
+ */
+function sj_registration_currency_admin_form($form, &$form_state) {
+  $form['currency'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Devise (ex: EUR, USD...)'),
+    '#default_value' => get_currency(),
+    '#size' => 50,
+    '#maxlength' => 128,
+    '#required' => true
+  );
+  
+  $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => 'Mettre à jour',
+      '#submit' => array('sj_registration_currency_admin_submit'),
+  );
+ 
+  return $form;
+}
+
+/**
+ * currency save in config variables hook_submit()
+ *
+ * @param type $form
+ * @param type $form_state 
+ */
+function sj_registration_currency_admin_submit($form, &$form_state) {
+  $value = $form_state['values']['currency'];
+  
+  variable_set('sj_registration_currency', $value);
+  drupal_set_message(t('Devise mise à jour à @currency'), array('@currency' => $value));
   
   drupal_goto('/admin/config/sj_registration');
 }
@@ -585,8 +635,8 @@ function sj_registration_ajax_form($form, &$form_state) {
             ->execute()
             ->fetchAll();
   
-  $form_state['storage']['currency'] = current($passes)->currency;
-  $currency = currency_symbole($form_state['storage']['currency']);
+  $form_state['storage']['currency'] = get_currency();
+  $currency = get_currency(true);
   
   // If $form_state['step'] is not set, we set it to 1
 	$form_state['step'] = isset($form_state['step']) ? $form_state['step'] : 1;
@@ -610,7 +660,7 @@ function sj_registration_ajax_form($form, &$form_state) {
       
       $form['#prefix'] .= '<div id="sj_registration_ajax_form">';
       $form['#prefix'] .= '<div class="intro"><p>' . t('Bienvenue sur la page d\'inscription des Swing Jammerz.')
-            . '</p><p>' . t('Les Swing Jammerz étant une association, il est nécessaire d\'y adhérer afin de pouvoir s\'inscrire aux cours. Le prix de l\'adhésion est de @registration_fee €.', array('@registration_fee' => get_registration_fee()))
+            . '</p><p>' . t('Les Swing Jammerz étant une association, il est nécessaire d\'y adhérer afin de pouvoir s\'inscrire aux cours. Le prix de l\'adhésion est de @registration_fee @currency.', array('@registration_fee' => get_registration_fee(), '@currency' => get_currency(true)))
             . '</p></div>';
       
       $form['type'] = array(
@@ -745,7 +795,7 @@ function sj_registration_ajax_form($form, &$form_state) {
         if (check_lesson_full($lesson, $form_state['storage']['gender'], $form_state['storage']['type'])) {
           $options[$lesson->sjl_id] = '<span class="lesson-option-list"></span>' . $lesson->name;
           
-          $form['couple'] = array('#markup' => t('Attention! Certains cours sont complets. Vous pouvez vous inscrire en liste d\'attente sur ces cours.<br/> Alors nous vous tiendrons alors informé par mail.') . '</div><br/>');
+          $form['couple'] = array('#markup' => '<div class="alert alert-danger alert-dismissable">' . t('Attention! Certains cours sont complets. Vous pouvez vous inscrire en liste d\'attente sur ces cours.<br/> Nous vous tiendrons alors informé par mail.') . '</div><br/>');
         } else {
           $options[$lesson->sjl_id] = $lesson->name;
         }
@@ -979,7 +1029,7 @@ function sj_registration_ajax_form($form, &$form_state) {
       $registered = $form_state['storage']['registered_last_year'] ? t('Oui') : t('Non');
       
       $lessons = db_select('sj_lessons', 'l')
-              ->fields('l', array('name'))
+              ->fields('l')
               ->condition('sjl_id', $form_state['storage']['lessons'], 'IN')
               ->execute()
               ->fetchAll();
@@ -1000,7 +1050,13 @@ function sj_registration_ajax_form($form, &$form_state) {
       
       $display_lessons = '';
       foreach ($lessons as $lesson) {
-        $display_lessons .= $lesson->name . '<br/>';
+        $display_lessons .= $lesson->name;
+        
+        if (check_lesson_full($lesson, $form_state['storage']['gender'], $form_state['storage']['type'])) {
+          $display_lessons .= '<span class="red"> (' . t('Option') . ')</span>';
+        }
+        
+        $display_lessons .= '<br/>';
       }
       
       $form['rundown'] = array(
@@ -1421,6 +1477,23 @@ function get_registration_payment($return_string = false) {
   }
   
   return $payment;
+}
+
+/**
+ * Get currency
+ *
+ * @param boolean $with_symbol
+ * 
+ * @return string 
+ */
+function get_currency($with_symbol = false) {
+  $currency = variable_get('sj_registration_currency', null);
+  
+  if ($with_symbol) {
+    $currency = currency_symbole($currency);
+  }
+  
+  return $currency;
 }
 
 /**
