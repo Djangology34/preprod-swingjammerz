@@ -1135,6 +1135,7 @@ function sj_registration_ajax_form($form, &$form_state) {
         'wrapper' => 'sj_registration_ajax_form',
         // We pass a callback function we will use later to render the form for the user
         'callback' => 'sj_registration_ajax_form_ajax_callback',
+        'color' => 'green'
       ),
     );
   }
@@ -1150,6 +1151,7 @@ function sj_registration_ajax_form($form, &$form_state) {
         'wrapper' => 'sj_registration_ajax_form',
         // We pass a callback function we will use later to render the form for the user
         'callback' => 'sj_registration_ajax_form_ajax_callback',
+        'color' => 'green'
       ),
     );
   } else {
@@ -1158,12 +1160,12 @@ function sj_registration_ajax_form($form, &$form_state) {
     (
       '#type' => 'submit',
       '#value' => t('Valider'),
-      '#ajax' => array
-      (
+      '#ajax' => array(
         // We pass in the wrapper we created at the start of the form
         'wrapper' => 'sj_registration_ajax_form',
         // We pass a callback function we will use later to render the form for the user
         'callback' => 'sj_registration_ajax_form_ajax_callback',
+        'color' => 'green'
       ),
     );
   }
@@ -1393,6 +1395,7 @@ function sj_registration_ajax_form_submit($form, &$form_state) {
  *
  * @param type $form
  * @param type $form_state
+ * 
  * @return type 
  */
 function sj_registration_ajax_form_ajax_callback($form, &$form_state)

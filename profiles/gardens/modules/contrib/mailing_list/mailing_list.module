@@ -438,7 +438,15 @@ function mailing_list_subscription_form($form, &$form_state, $list, $is_callback
     '#value' => t('Envoyer'),
     '#type' => 'submit',
     '#submit' => array('mailing_list_subscription_form_submit'),
-    '#attributes' =>array('class' => array('btn-warning'))
+    '#attributes' =>array('class' => array('btn-warning')),
+    '#ajax' => array(
+        // We pass in the wrapper we created at the start of the form
+        'wrapper' => 'mailing-list-subscription-form-1',
+        // We pass a callback function we will use later to render the form for the user
+        'callback' => 'mailing_list_subscription_form_ajax_callback',
+        'method'   => 'replaceWith',
+        'color' => 'orange'
+      ),
   );
 
   if ($admin && $email) {
@@ -452,6 +460,19 @@ function mailing_list_subscription_form($form, &$form_state, $list, $is_callback
 
   $form['#validate'] = array('mailing_list_subscription_form_validate');
   return $form;
+}
+
+/**
+ * Mailing list subscription form ajax callback
+ *
+ * @param type $form
+ * @param type $form_state
+ * 
+ * @return type 
+ */
+function mailing_list_subscription_form_ajax_callback($form, &$form_state)
+{
+	return $form;
 }
 
 /**

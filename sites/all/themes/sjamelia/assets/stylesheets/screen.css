@@ -11684,7 +11684,8 @@ form { padding: 12px 0 36px; }
 
 .lesson-option-list { background: url('../images/lesson_full.png') no-repeat; width: 100px; height: 90px; display: block; position: absolute; bottom: 25px; left: 135px; }
 
-.ajax-progress { background: url('../images/ajax-loader.gif') no-repeat !important; margin: auto; width: 45px; height: 45px; display: block; }
+.ajax-progress-green { background: url('../images/ajax-loader-green.gif') no-repeat !important; margin: auto; width: 45px; height: 45px; display: block; }
+.ajax-progress-orange { background: url('../images/ajax-loader-orange.gif') no-repeat !important; margin: auto; width: 45px; height: 45px; display: block; }
 
 /* Mailing list */
 #block-mailing-list-1 { background-color: #F9CB9C; }
