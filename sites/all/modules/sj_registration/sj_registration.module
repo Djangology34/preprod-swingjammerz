@@ -190,7 +190,7 @@ function sj_registration_menu() {
   $items['inscription_paypal'] = array(
     'title' => variable_get('sj_registration_paypal', 'Inscription'),
     'description' => 'Handle paypal registration callback',
-    'page callback' => 'sj_registration_paypal',
+    'page callback' => 'sj_registration_paypal_callback',
     'access callback' => true
   );
   
@@ -202,9 +202,35 @@ function sj_registration_menu() {
  *
  * @return string 
  */
-function sj_registration_paypal() {
+function sj_registration_paypal_callback() {
   if (($_GET['st'] == 'Completed')) {
-    return variable_get('payment_received_message', 'Paiement réussi!');
+    $query = db_select('sj_lessons', 'l');
+    $query->join('sj_students_lessons', 'sl', 'sl.sj_lesson_id = l.sjl_id');
+    
+    $lessons = $query->fields('l', array('name'))
+            ->condition('sl.sj_student_id', $_GET['cm'])
+            ->execute()
+            ->fetchAll();
+    
+    $update = db_update('sj_students')
+            ->condition('sjs_id', $_GET['cm'])
+            ->fields(array('payed' => 1))
+            ->execute();
+    
+    if (count($lessons)) {
+      $text = variable_get('payment_received_message', 'Paiement réussi, votre inscription est confirmée pour les cours suivants:');
+    
+      $text .= '<ul>';
+      foreach ($lessons as $lesson) {
+        $text .= '<li>' . $lesson->name . '</li>';
+      }
+      $text .= '</ul>';
+
+      return $text;
+    } else {
+      watchdog('sj_registration', 'sj_registration_paypal_callback_error', NULL);
+    }
+    
   } else {
     return drupal_set_message(variable_get('payment_not_received_message', 'Le paiement a échoué!'), 'error');
   }

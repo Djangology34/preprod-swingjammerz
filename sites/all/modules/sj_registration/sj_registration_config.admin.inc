@@ -241,8 +241,8 @@ function render_lessons($event = 'cours') {
 function render_students($event = 'cours') {
   $query = db_select('sj_students', 's');
   $query->join('sj_passes', 'p', 'p.sjp_id = s.pass_id');
-  $query->rightJoin('sj_students_lessons', 'sl', 'sl.sj_student_id = s.sjs_id');
-  $query->rightJoin('sj_lessons', 'l', 'l.sjl_id = sl.sj_lesson_id');
+  $query->Join('sj_students_lessons', 'sl', 'sl.sj_student_id = s.sjs_id');
+  $query->Join('sj_lessons', 'l', 'l.sjl_id = sl.sj_lesson_id');
   
   $students = $query->fields('s')
           ->distinct('s.id')
