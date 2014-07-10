@@ -1,8 +1,0 @@
-name = Module SwingJammerz Lesson Builder
-description = Module allowing creating and displaying courses for Swing Jammerz School Danse
-core = 7.x
-package = Swing Jammerz
-configure = admin/config/sj_lesson_builder
-files[] = sj_lesson_builder.module
-files[] = sj_lesson_builder.install
-files[] = sj_lesson_builder_config.admin.inc

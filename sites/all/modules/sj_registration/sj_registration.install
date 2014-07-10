@@ -182,7 +182,7 @@ function sj_registration_schema() {
       'address' => array(
         'type' => 'varchar',
         'length' => 255,
-        'not null' => TRUE,
+        'not null' => FALSE,
         'default' => '',
         'description' => "The address of the student."
       ),
@@ -200,11 +200,18 @@ function sj_registration_schema() {
         'default' => '',
         'description' => "The city of the student."
       ),
+      'country' => array(
+        'type' => 'varchar',
+        'length' => 30,
+        'not null' => FALSE,
+        'default' => 'FR',
+        'description' => "The country of the student."
+      ),
       'pass_id' => array(
         'type' => 'int',
         'size' => 'normal',
         'unsigned' => TRUE,
-        'not null' => FALSE,
+        'not null' => TRUE,
         'description' => "The pass the student bought."
       ),
       'payed' => array(
@@ -218,7 +225,7 @@ function sj_registration_schema() {
       'payment_method' => array(
         'type' => 'varchar',
         'length' => 255,
-        'not null' => FALSE,
+        'not null' => TRUE,
         'default' => '',
         'description' => "The payment method of student."
       ),

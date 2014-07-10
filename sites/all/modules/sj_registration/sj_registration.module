@@ -5,6 +5,9 @@
  * Module Swing Jammerz for the Registration process
  */
 
+// For list of countries
+require_once DRUPAL_ROOT . '/includes/locale.inc';
+
 /**
  * Paypal percent
  */
@@ -952,6 +955,15 @@ function sj_registration_ajax_form($form, &$form_state) {
         '#size' => 50,
         '#maxlength' => 128,
         '#required' => true
+      );
+      
+      $countries = country_get_list();
+      
+      $form['country'] = array(
+          '#type' => 'select',
+          '#title' => t('Votre pays:'),
+          '#options' => $countries,
+          '#default_value' => isset($form_state['storage']['country']) ? $form_state['storage']['country'] : null
       );
       
       $form['registered_last_year'] = array(

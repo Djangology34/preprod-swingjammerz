@@ -70,8 +70,7 @@ function sj_registration_student_admin_form($form, &$form_state, $id) {
     '#title' => t('Numéro de téléphone:'),
     '#default_value' => $student instanceof stdClass ? $student->phone : null,
     '#size' => 50,
-    '#maxlength' => 128,
-    '#required' => true
+    '#maxlength' => 128
   );
 
   $form['address'] = array(
@@ -79,8 +78,7 @@ function sj_registration_student_admin_form($form, &$form_state, $id) {
     '#title' => t('Adresse:'),
     '#default_value' => $student instanceof stdClass ? $student->address : null,
     '#size' => 50,
-    '#maxlength' => 255,
-    '#required' => true
+    '#maxlength' => 255
   );
 
   $form['postcode'] = array(
@@ -88,8 +86,7 @@ function sj_registration_student_admin_form($form, &$form_state, $id) {
     '#title' => t('Code postal:'),
     '#default_value' => $student instanceof stdClass ? $student->postcode : null,
     '#size' => 50,
-    '#maxlength' => 128,
-    '#required' => true
+    '#maxlength' => 128
   );
 
   $form['city'] = array(
@@ -97,8 +94,16 @@ function sj_registration_student_admin_form($form, &$form_state, $id) {
     '#title' => t('Ville:'),
     '#default_value' => $student instanceof stdClass ? $student->city : null,
     '#size' => 50,
-    '#maxlength' => 128,
-    '#required' => true
+    '#maxlength' => 128
+  );
+  
+  $countries = country_get_list();
+      
+  $form['country'] = array(
+      '#type' => 'select',
+      '#title' => t('Pays:'),
+      '#options' => $countries,
+      '#default_value' => $student instanceof stdClass ? $student->country : null,
   );
 
   // Pass
@@ -165,8 +170,7 @@ function sj_registration_student_admin_form($form, &$form_state, $id) {
         '#type' => 'checkboxes',
         '#title' => t('Peut s\'inscrire à @nb_lessons cours:', array('@nb_lessons' => $nb_lessons)),
         '#default_value' => count($selection) ? $selection : null,
-        '#options' => $options,
-        '#required' => TRUE
+        '#options' => $options
       );
 
   $form['payment_method'] = array(
@@ -227,6 +231,7 @@ function sj_registration_student_admin_submit($form, &$form_state) {
       'address' => $values['address'],
       'postcode' => $values['postcode'],
       'city' => $values['city'],
+      'country' => $values['country'],
       'pass_id' => $values['pass_id'],
       'payed' => $values['payed'],
       'payment_method' => $values['payment_method'],

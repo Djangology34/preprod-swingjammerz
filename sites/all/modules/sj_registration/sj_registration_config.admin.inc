@@ -241,10 +241,11 @@ function render_lessons($event = 'cours') {
 function render_students($event = 'cours') {
   $query = db_select('sj_students', 's');
   $query->join('sj_passes', 'p', 'p.sjp_id = s.pass_id');
-  $query->join('sj_students_lessons', 'sl', 'sl.sj_student_id = s.sjs_id');
-  $query->join('sj_lessons', 'l', 'l.sjl_id = sl.sj_lesson_id');
-
+  $query->rightJoin('sj_students_lessons', 'sl', 'sl.sj_student_id = s.sjs_id');
+  $query->rightJoin('sj_lessons', 'l', 'l.sjl_id = sl.sj_lesson_id');
+  
   $students = $query->fields('s')
+          ->distinct('s.id')
           ->condition('p.year', get_filter_year())
           ->condition('l.event', $event)
           ->orderBy('payed', 'DESC')
@@ -437,7 +438,7 @@ function display_students(array $students, $event = 'cours', $details = true, $l
             . '<td>' . $student->gender . '</td>'
             . '<td>' . $student->email . '</td>'
             . '<td>' . $student->phone . '</td>'
-            . '<td>' . $student->address . ' ' . $student->postcode . ' ' . $student->city . '</td>'
+            . '<td>' . $student->address . ' ' . $student->postcode . ' ' . $student->city . ' ' . $student->country . '</td>'
             . '<td>' . $pass_name . '</td>'
             . '<td>' . $student->payment_method . '</td>'
             . '<td class="center"><img width="20px" src="http://' . $_SERVER['HTTP_HOST'] . '/sites/all/themes/sjamelia/assets/images/icon/' . $payed_icon . '" /></td>'
