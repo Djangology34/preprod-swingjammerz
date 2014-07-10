@@ -379,7 +379,7 @@ Drupal.ajax.prototype.beforeSend = function (xmlhttprequest, options) {
       $('.throbber', this.progress.element).after('<div class="message">' + this.progress.message + '</div>');
     }*/
     
-    $(this.element).parent().replaceWith(this.progress.element);
+    //$(this.element).parent().replaceWith(this.progress.element);
     //$(this.element).after(this.progress.element);
   }
 };

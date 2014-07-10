@@ -12,8 +12,8 @@
       if (Drupal.settings.sj_registration) {
         var datas = Drupal.settings.sj_registration.datas;
         
-        // Active the right button(s)
-        if (datas.data && !isNaN(datas.data)) {
+        // Activate the selected button(s)
+        if (datas && datas.data && !isNaN(datas.data)) {
           $('button[data-id="edit-' + datas.name + '-' + datas.data + '"').addClass('active');
         }
       } else {
@@ -75,7 +75,25 @@
       }
       
       setTotalPrice();
-    })
+    });
+    
+    // Add Paypal fees to price
+    $('.form-item-payment-method input:radio').live('click', function() {
+      if ($('#paypal-fee')) {
+        $('#paypal-fee').remove();
+        setTotalPrice();
+      }
+      
+      if ($('input[value="paypal"]').attr('checked')) {
+        var paypal = Drupal.settings.sj_registration.paypal;
+        var totalPrice = $('#price-total').html();
+        var paypalFee = (totalPrice * paypal.paypal_percent) + paypal.paypal_fee;
+        var fullPrice =  +totalPrice + +paypalFee;
+
+        $('#price-type').after('<span id="paypal-fee" class="pointer" title="Paypal"> + ' + paypalFee + '</span>');
+        $('#price-total').html(fullPrice);
+      }
+    });
     
     // Tipsy gravity
     $('#registration-form-pricer span').tipsy({gravity: 'n', fade: true, live: true});
