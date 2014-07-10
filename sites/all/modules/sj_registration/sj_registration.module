@@ -955,13 +955,9 @@ function sj_registration_ajax_form($form, &$form_state) {
       );
       
       $form['registered_last_year'] = array(
-        '#type' => 'radios',
+        '#type' => 'checkbox',
         '#title' => t("Etiez-vous inscrit l'année dernière?"),
         '#default_value' => isset($form_state['storage']['registered_last_year']) ? $form_state['storage']['registered_last_year'] : null,
-        '#options' => array(
-            1 => t('Oui'),
-            0 => t('Non')
-        ),
         '#suffix' => '</div>'
       );
       
