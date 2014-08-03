@@ -750,7 +750,8 @@ function sj_registration_ajax_form($form, &$form_state) {
             . '</p></div>';
       
       $form['type'] = array(
-        '#prefix' => '<label class="label-title">' . t("Quel type d'inscription?") . '</label>',
+        '#prefix' => '<div class="two-columns width-large margin-auto"><div class="first"><label class="label-title">' . t("Quel type d'inscription?") . '</label>',
+        '#suffix' => '</div>',
         '#type' => 'radios',
         '#default_value' => isset($form_state['storage']['type']) ? $form_state['storage']['type'] : null,
         '#options' => array(
@@ -762,7 +763,8 @@ function sj_registration_ajax_form($form, &$form_state) {
       
       $form['gender'] = array(
         '#type' => 'radios',
-        '#prefix' => '<label class="label-title">' . t("Quel est votre genre?") . '</label>',
+        '#prefix' => '<div class="second"><label class="label-title">' . t("Quel est votre genre?") . '</label>',
+        '#suffix' => '</div></div><div class="clear"></div>',
         '#default_value' => isset($form_state['storage']['gender']) ? $form_state['storage']['gender'] : null,
         '#options' => array(
             'masculin' => t('Masculin'),

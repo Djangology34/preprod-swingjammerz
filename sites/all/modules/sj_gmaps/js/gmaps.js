@@ -2,7 +2,8 @@ function initialize() {
   var map;
   var bounds = new google.maps.LatLngBounds();
   var mapOptions = {
-      mapTypeId: 'roadmap'
+      mapTypeId: 'roadmap',
+      scrollwheel: false
   };
 
   // Display a map on the page
