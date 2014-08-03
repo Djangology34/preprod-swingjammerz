@@ -212,10 +212,23 @@ function sj_registration_paypal_callback() {
             ->execute()
             ->fetchAll();
     
+    $student = db_select('sj_students', 's')
+            ->fields('s', array('couple_id'))
+            ->condition('sjs_id', $_GET['cm'])
+            ->execute()
+            ->fetch();
+    
     $update = db_update('sj_students')
             ->condition('sjs_id', $_GET['cm'])
             ->fields(array('payed' => 1))
             ->execute();
+    
+    if ($student->couple_id) {
+      $update = db_update('sj_students')
+              ->condition('sjs_id', $student->couple_id)
+              ->fields(array('payed' => 1))
+              ->execute();
+    }
     
     if (count($lessons)) {
       $text = variable_get('payment_received_message', 'Paiement réussi, votre inscription est confirmée pour les cours suivants:');
@@ -232,6 +245,8 @@ function sj_registration_paypal_callback() {
     }
     
   } else {
+    watchdog('sj_registration', 'sj_registration_paypal_callback_payment_failed', NULL);
+    
     return drupal_set_message(variable_get('payment_not_received_message', 'Le paiement a échoué!'), 'error');
   }
 }
@@ -1194,6 +1209,7 @@ function sj_registration_ajax_form($form, &$form_state) {
       }
       
       $price = calculatePrice($pass->price, $form_state['storage']['type']);
+      $form_state['storage']['price'] = calculateTotalPrice($price, $is_paypal);
       
       $form['rundown']['#markup'] .= '<h3 class="lobster">' . t('Paiement') . '</h3>'
               . '<table class="margin-top margin-bottom"><tbody>'
@@ -1203,7 +1219,7 @@ function sj_registration_ajax_form($form, &$form_state) {
         $form['rundown']['#markup'] .= '<tr><td class="lobster tx-right">' . t('Frais Paypal') . ':</td><td>' . getPaypalFee($price) . ' ' . $currency . '</td></tr>';
       }
       
-      $form['rundown']['#markup'] .= '<tr><td class="lobster tx-right">' . t('Prix total') . ':</td><td>' . calculateTotalPrice($price, $is_paypal) . ' ' . $currency . '</td></tr>'
+      $form['rundown']['#markup'] .= '<tr><td class="lobster tx-right">' . t('Prix total') . ':</td><td>' . $form_state['storage']['price'] . ' ' . $currency . '</td></tr>'
               . '</tbody></table>';
   }
   
@@ -1401,7 +1417,7 @@ function sj_registration_ajax_form_submit($form, &$form_state) {
     $form_state['storage']['id'] = $student_id;
     
     // Insert couple student
-    if ($form_state['storage']['type'] === 'couple') {
+    if (isCouple($form_state['storage']['type'])) {
       $couple_id = db_insert('sj_students')
             ->fields(array(
                 'firstname' => $form_state['storage']['couple_firstname'],
@@ -1416,6 +1432,9 @@ function sj_registration_ajax_form_submit($form, &$form_state) {
                 'pass_id' => $form_state['storage']['pass_id'],
                 'payment_method' => $form_state['storage']['payment_method'],
                 'waiting_list' => $waiting_list,
+                'registered_last_year' => $form_state['storage']['couple_registered_last_year'],
+                'price' => $form_state['storage']['price'],
+                'currency' => $form_state['storage']['currency'],
                 'couple_id' => $student_id,
                 'created_at' => format_date(time(), 'custom', 'Y-m-d H:i:s')
           ))
@@ -1520,6 +1539,12 @@ function sj_registration_paypal_request($datas) {
           ->fetch();
   
   $quantity = $datas['type'] === 'seul' ? 1 : 2;
+  
+  if ($quantity === 2) {
+    $datas['price'] = $datas['price'] / 2;
+  }
+  
+  $datas['price'] = round($datas['price'], 2, PHP_ROUND_HALF_DOWN);
   
   // Get vars from LM Paypal if it exists
   if (module_exists('lm_paypal')):
