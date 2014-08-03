@@ -9,7 +9,8 @@
     $( document ).ajaxComplete(function() {
       $('html, body').animate({scrollTop: 0},800);
       
-      if (Drupal.settings.sj_registration) {
+      // Check if parameters are given and if not checkboxes - avoid bug do to mutliple selection and validation
+      if (Drupal.settings.sj_registration && $('input[type=checkbox]').length === 0) {
         var datas = Drupal.settings.sj_registration.datas;
         
         // Activate the selected button(s)
@@ -17,7 +18,7 @@
           $('button[data-id="edit-' + datas.name + '-' + datas.data + '"').addClass('active');
         }
       } else {
-        $('input[type=checkbox]').attr('checked', false);
+        $('input[type=checkbox]').removeAttr('checked');
       }
     });
     

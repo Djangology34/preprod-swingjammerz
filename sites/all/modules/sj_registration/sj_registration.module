@@ -991,7 +991,7 @@ function sj_registration_ajax_form($form, &$form_state) {
           '#type' => 'select',
           '#title' => t('Votre pays:'),
           '#options' => $countries,
-          '#default_value' => isset($form_state['storage']['country']) ? $form_state['storage']['country'] : null
+          '#default_value' => isset($form_state['storage']['country']) ? $form_state['storage']['country'] : 'FR'
       );
       
       $form['registered_last_year'] = array(
@@ -1077,15 +1077,18 @@ function sj_registration_ajax_form($form, &$form_state) {
           '#maxlength' => 128,
           '#required' => true
         );
+      
+        $form['couple_country'] = array(
+            '#type' => 'select',
+            '#title' => t('Pays du partenaire:'),
+            '#options' => $countries,
+            '#default_value' => isset($form_state['storage']['couple_country']) ? $form_state['storage']['couple_country'] : 'FR'
+        );
         
         $form['couple_registered_last_year'] = array(
-          '#type' => 'radios',
-          '#title' => t("Etiez-vous inscrit l'année dernière?"),
+          '#type' => 'checkbox',
+          '#title' => t("Partenaire déjà inscrit l'année dernière?"),
           '#default_value' => isset($form_state['storage']['couple_registered_last_year']) ? $form_state['storage']['couple_registered_last_year'] : null,
-          '#options' => array(
-              1 => t('Oui'),
-              0 => t('Non')
-          ),
           '#suffix' => '</div>'
         );
       }
@@ -1287,7 +1290,7 @@ function sj_registration_ajax_form_validate($form, &$form_state)
       $lessons = sort_chosen_lessons($form_state['values']['lessons']);
       
       if (!count($lessons)) {
-        drupal_set_message(t('Vous devez choisir au moins 1 cours'), 'error');
+        drupal_set_message(t('Veuillez choisir au moins un cours'), 'error');
       } else {
         $pass = db_select('sj_passes', 'p')
               ->fields('p', array('sjp_id', 'nb_lessons'))
@@ -1295,7 +1298,7 @@ function sj_registration_ajax_form_validate($form, &$form_state)
               ->execute()
               ->fetch();
 
-        if ($pass->nb_lessons !== 'all' && count($lessons) > $pass->nb_lessons) {
+        if ($pass->nb_lessons !== 'all' && count($lessons) > intval($pass->nb_lessons)) {
           // Reset the lessons selected
           $form_state['storage']['lessons'] = array();
           $form_state['values']['lessons'] = array();
@@ -1377,6 +1380,7 @@ function sj_registration_ajax_form_submit($form, &$form_state) {
                 'address' => $form_state['storage']['address'],
                 'postcode' => $form_state['storage']['postcode'],
                 'city' => $form_state['storage']['city'],
+                'country' => $form_state['storage']['country'],
                 'pass_id' => $form_state['storage']['pass_id'],
                 'payment_method' => $form_state['storage']['payment_method'],
                 'waiting_list' => $waiting_list,
@@ -1401,6 +1405,7 @@ function sj_registration_ajax_form_submit($form, &$form_state) {
                 'address' => $form_state['storage']['couple_address'],
                 'postcode' => $form_state['storage']['couple_postcode'],
                 'city' => $form_state['storage']['couple_city'],
+                'country' => $form_state['storage']['couple_country'],
                 'pass_id' => $form_state['storage']['pass_id'],
                 'payment_method' => $form_state['storage']['payment_method'],
                 'waiting_list' => $waiting_list,
