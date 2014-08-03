@@ -1121,7 +1121,7 @@ function sj_registration_ajax_form($form, &$form_state) {
       break;
     case 6:
       $form['#prefix'] = '<div id="sj_registration_ajax_form">';
-      $is_couple = $form_state['storage']['type'] === 'couple';
+      $is_couple = isCouple($form_state['storage']['type']);
       $is_paypal = $form_state['storage']['payment_method'] === 'paypal';
       $registered = $form_state['storage']['registered_last_year'] ? t('Oui') : t('Non');
       
@@ -1193,16 +1193,17 @@ function sj_registration_ajax_form($form, &$form_state) {
           . '</tbody></table>';
       }
       
-      $form_state['storage']['price'] = calculatePrice($pass->price, $is_paypal);
-      
-      if ($is_couple) {
-        $form_state['storage']['price'] = $form_state['storage']['price'] * 2;
-      }
+      $price = calculatePrice($pass->price, $form_state['storage']['type']);
       
       $form['rundown']['#markup'] .= '<h3 class="lobster">' . t('Paiement') . '</h3>'
               . '<table class="margin-top margin-bottom"><tbody>'
-              . '<tr><td class="lobster tx-right">' . t('Méthode de paiement') . ':</td><td>' . $form_state['storage']['payment_method'] . '</td></tr>'
-              . '<tr><td class="lobster tx-right">' . t('Prix') . ':</td><td>' . $form_state['storage']['price'] . ' ' . $currency . '</td></tr>'
+              . '<tr><td class="lobster tx-right">' . t('Méthode de paiement') . ':</td><td>' . $form_state['storage']['payment_method'] . '</td></tr>';
+      
+      if ($form_state['storage']['payment_method'] === 'paypal') {
+        $form['rundown']['#markup'] .= '<tr><td class="lobster tx-right">' . t('Frais Paypal') . ':</td><td>' . getPaypalFee($price) . ' ' . $currency . '</td></tr>';
+      }
+      
+      $form['rundown']['#markup'] .= '<tr><td class="lobster tx-right">' . t('Prix total') . ':</td><td>' . calculateTotalPrice($price, $is_paypal) . ' ' . $currency . '</td></tr>'
               . '</tbody></table>';
   }
   
@@ -1278,6 +1279,12 @@ function sj_registration_ajax_form($form, &$form_state) {
  */
 function sj_registration_ajax_form_validate($form, &$form_state)
 {
+  // Clear the form error state if go backward
+  if($form_state['values']['op']==t('Retour')) {
+    form_clear_error();
+    return true;
+  }
+  
 	// First we set up a switch for each of our three steps
 	switch($form_state['step']) {
     case "2":
@@ -1777,21 +1784,57 @@ function currency_symbole($currency) {
 }
 
 /**
- * Calculate total price
+ * Is Couple
+ *
+ * @param string $type
+ * 
+ * @return boolean
+ */
+function isCouple($type) {
+  return $type === 'couple';
+}
+
+/**
+ * Calculate price (without paypal fees)
  *
  * @param integer $pass_price
- * @param boolean $is_paypal
+ * @param string $type
  * 
- * @return integer
+ * @return float
  */
-function calculatePrice($pass_price, $is_paypal) {
+function calculatePrice($pass_price, $type) {
   $price = floatval(get_registration_fee()) + floatval($pass_price);
   
-  if ($is_paypal) {
-    $total = floatval($pass_price) + get_registration_fee();
-    $paypal_fee = ( $total * PAYPAL_PERCENT) + PAYPAL_FEE;
-    $price = $price + $paypal_fee;
+  if (isCouple($type)) {
+    $price = $price * 2;
   }
   
   return  $price;
+}
+
+/**
+ * Calculate total price
+ *
+ * @param integer $price
+ * @param boolean $is_paypal
+ * 
+ * @return float
+ */
+function calculateTotalPrice($price, $is_paypal) {
+  if ($is_paypal) {
+    $price = $price + getPaypalFee($price);
+  }
+  
+  return  $price;
+}
+
+/**
+ * Get paypal fee
+ *
+ * @param float $total
+ * 
+ * @return float
+ */
+function getPaypalFee($total_price) {
+  return ($total_price * PAYPAL_PERCENT) + PAYPAL_FEE;
 }
