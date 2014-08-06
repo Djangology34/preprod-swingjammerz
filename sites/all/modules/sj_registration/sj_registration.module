@@ -90,14 +90,6 @@ function sj_registration_menu() {
     'access arguments' => array('administer site configuration')
   );
   
-  $items['admin/config/sj_registration/pricer'] = array(
-    'title' => t('Swing Jammerz - Tableau des prix'),
-    'description' => 'Swing Jammerz - Tableau des prix',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('sj_registration_pricer_admin_form'),
-    'access arguments' => array('administer site configuration')
-  );
-  
   // Pass Management
   $items['admin/config/sj_registration/pass/new'] = array(
     'title' => t('Swing Jammerz - Créer un pass'),
@@ -122,6 +114,32 @@ function sj_registration_menu() {
     'page arguments' => array(5),
     'access callback' => true,
     'file' => 'sj_registration_config_pass.admin.inc'
+  );
+  
+  // Pricer Management
+  $items['admin/config/sj_registration/pricer/new'] = array(
+    'title' => t('Swing Jammerz - Créer un pass'),
+    'description' => 'Swing Jammerz - Créer un pass',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sj_registration_pricer_admin_form'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'sj_registration_config_pricer.admin.inc'
+  );
+  
+  $items['admin/config/sj_registration/pricer/edit/%'] = array(
+    'title' => t('Swing Jammerz - Editer un pass'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sj_registration_pricer_admin_form', 5),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'sj_registration_config_pricer.admin.inc'
+  );
+  
+  $items['admin/config/sj_registration/pricer/delete/%'] = array(
+    'title' => t('Swing Jammerz - Supprimer un pass'),
+    'page callback' => 'sj_registration_lesson_admin_delete',
+    'page arguments' => array(5),
+    'access callback' => true,
+    'file' => 'sj_registration_config_pricer.admin.inc'
   );
   
   // Student Management
@@ -451,48 +469,6 @@ function sj_registration_settings_admin_submit($form, &$form_state) {
   variable_set('registration_payment', $form_state['values']['registration_payment']);
   
   drupal_set_message(t('L\' inscription est @settings - Le paiement en ligne est @payment'), array('@settings' => get_registration_settings(true), '@payment' => get_registration_payment(true)));
-  
-  drupal_goto('/admin/config/sj_registration');
-}
-
-/**
- * Edit pricer hook_form()
- *
- * @param type $form
- * @param type $form_state
- * 
- * @return array $form 
- */
-function sj_registration_pricer_admin_form($form, &$form_state) {
-  $form['registration_fee'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Adhésion'),
-    '#default_value' => get_registration_fee(),
-    '#size' => 50,
-    '#maxlength' => 128,
-    '#required' => true
-  );
-  
-  $form['submit'] = array(
-      '#type' => 'submit',
-      '#value' => 'Mettre à jour',
-      '#submit' => array('sj_registration_fee_admin_submit'),
-  );
- 
-  return $form;
-}
-
-/**
- * Registration pricer submit hook_submit()
- *
- * @param type $form
- * @param type $form_state 
- */
-function sj_registration_pricer_admin_submit($form, &$form_state) {
-  $value = $form_state['values']['registration_fee'];
-  
-  variable_set('sj_registration_fee', $value);
-  drupal_set_message(t('Frais d\'adhésion mis à jour à @fee @currency'), array('@fee' => $value, '@currency' => get_currency(true)));
   
   drupal_goto('/admin/config/sj_registration');
 }

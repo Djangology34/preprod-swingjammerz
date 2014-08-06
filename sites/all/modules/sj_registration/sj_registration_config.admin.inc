@@ -37,8 +37,7 @@ function sj_registration_admin()
           . 'Paiement en ligne: <b>' . get_registration_payment(true) . '</b>'
           . ' - <a href="/admin/config/sj_registration/settings/edit">' . t('Modifier') . '</a><br/>';
   
-  $content .= '<a href="/admin/config/sj_registration/pricer/edit">' . t('Tableau des prix') . '</a><br/>';
-  
+  $content .= render_pricer();
   $content .= render_places();
   $content .= render_passes();
   $content .= render_lessons();
@@ -88,6 +87,70 @@ function sj_registration_admin_stage()
   );
   
   return $output;
+}
+
+/**
+ * Render pricer table for admin
+ *
+ * @return string 
+ */
+function render_pricer() {
+  $prices = db_select('sj_pricer', 'p')
+              ->fields('p')
+              ->condition('p.year', get_filter_year())
+              ->execute()
+              ->fetchAll();
+  
+  $content = '<fieldset class="collapsible collapsed">';
+  $content .= '<legend><span class="fieldset-legend">' . t('Tableau des prix') . '</span></legend>';
+  
+  $content .= '<div class="fieldset-wrapper">';
+  $content .= '<table><thead><tr>'
+          . '<th>#</th>'
+          . '<th>' . t('Nombre de cours normal') . '</th>'
+          . '<th>' . t('Nombre de cours invitational') . '</th>'
+          . '<th>' . t('Pass') . '</th>'
+          . '<th>' . t('Prix') . '</th>'
+          . '<th>' . t('Devise') . '</th>'
+          . '<th>' . t('Année') . '</th>'
+          . '<th class="center">' . t('Editer') . '</th>'
+          . '<th class="center">' . t('Supprimer') . '</th>'
+          . '</tr></thead><tbody>';
+  
+  foreach($prices as $price) {
+    $pass_name = '';
+    if ($price->pass_id) {
+      $pass = db_select('sj_passes', 'p')
+              ->fields('p', array('name'))
+              ->condition('p.year', get_filter_year())
+              ->condition('p.sjp_id', $price->pass_id)
+              ->execute()
+              ->fetch();
+      
+      $pass_name = $pass->name;
+    }
+    
+    $content .= '<tr>'
+            . '<td>' . $price->id . '</td>'
+            . '<td>' . $price->nb_lessons_normal . '</td>'
+            . '<td>' . $price->nb_lessons_invitational . '</td>'
+            . '<td>' . $pass_name . '</td>'
+            . '<td>' . $price->price . '</td>'
+            . '<td>' . $price->currency . '</td>'
+            . '<td>' . $price->year . '</td>'
+            . '<td class="center"><a href="/admin/config/sj_registration/pricer/edit/' . $price->id . '"><img width="20px" src="http://' . $_SERVER['HTTP_HOST'] . '/sites/all/themes/sjamelia/assets/images/icon/settings.png" /></a></td>'
+            . '<td class="center"><a href="/admin/config/sj_registration/pricer/delete/' . $price->id . '"><img width="20px" src="http://' . $_SERVER['HTTP_HOST'] . '/sites/all/themes/sjamelia/assets/images/icon/stop.png" /></a></td>'
+            . '</tr>';
+  }
+  
+  $content .='</tbody></table>';
+  $content .= '<a href="/admin/config/sj_registration/pricer/new">'
+    . t('Créer un nouveau prix')
+    . '</a><br/><br/>';
+  
+  $content .= '</div></fieldset>';
+  
+  return $content;
 }
 
 /**
