@@ -123,7 +123,7 @@ function sj_registration_lesson_admin_form($form, &$form_state, $id = null) {
   
   $form['fee'] = array(
       '#type' => 'textfield',
-      '#title' => t('Frais d\' adhésion pour au cours'),
+      '#title' => t('Frais d\' adhésion au cours'),
       '#default_value' => $lesson instanceof stdClass ? $lesson->fee : null,
       '#size' => 50,
       '#maxlength' => 128

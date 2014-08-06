@@ -38,9 +38,12 @@ function sjamelia_preprocess_page(&$variables) {
 
 /**
  * Implements template_process_page().
+ * 
+ * Problem with title display on front and pages. Don't remember exactly why I did that...
  */
 function sjamelia_process_page(&$variables) {
-  if(isset($variables['node']) && $variables['node'] && $variables['node'] instanceof stdClass && $variables['node']->field_hide_title['fr'][0]['value']) {
+  /*if (isset($variables['node']) && $variables['node'] instanceof stdClass 
+          && isset($variable['node']->field_hide_title['fr']) && $variables['node']->field_hide_title['fr'][0]['value']) {
     $variables['title'] = NULL;
-  }
+  }*/
 }

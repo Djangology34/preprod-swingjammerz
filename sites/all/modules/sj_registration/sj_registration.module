@@ -231,13 +231,13 @@ function sj_registration_paypal_callback() {
     }
     
     if (count($lessons)) {
-      $text = variable_get('payment_received_message', 'Paiement réussi, votre inscription est confirmée pour les cours suivants:');
+      $text = '<div class="center margin-bottom">' . variable_get('payment_received_message', 'Paiement réussi, votre inscription est confirmée pour les cours suivants:');
     
-      $text .= '<ul>';
+      $text .= '<ul class="list-style-none">';
       foreach ($lessons as $lesson) {
         $text .= '<li>' . $lesson->name . '</li>';
       }
-      $text .= '</ul>';
+      $text .= '</ul></div>';
 
       return $text;
     } else {

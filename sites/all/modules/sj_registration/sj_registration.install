@@ -325,6 +325,11 @@ function sj_registration_schema() {
         'default' => 'EUR',
         'description' => "The currency of the pass."
       ),
+      'description' => array(
+        'type' => 'text',
+        'description' => "The description of the pass.",
+        'translatable' => TRUE
+      ),
       'year' => array(
         'type' => 'varchar',
         'length' => 255,

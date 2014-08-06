@@ -11636,6 +11636,8 @@ form { padding: 12px 0 36px; }
 
 .red { color: #911821; }
 
+.list-style-none { list-style: none; }
+
 /* Page */
 .field-name-body { margin: 52px; }
 
@@ -11679,7 +11681,7 @@ form { padding: 12px 0 36px; }
 #sj_registration_ajax_form .intro p { margin: 10px 0; }
 
 #sj_registration_ajax_form .label-title { font-family: 'Lobster', cursive; font-size: 32px; }
-#sj_registration_ajax_form .form-radios { margin-left: 42%; text-align: left; }
+#sj_registration_ajax_form .form-radios { margin-left: 44%; text-align: left; }
 
 #sj_registration_ajax_form .custom-form-buttons { margin: auto; width: 70%; }
 #sj_registration_ajax_form .custom-form-buttons button { position: relative; min-width: 185px; max-width: 200px; min-height: 85px; margin: 30px; }

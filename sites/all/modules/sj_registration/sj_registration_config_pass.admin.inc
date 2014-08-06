@@ -39,6 +39,13 @@ function sj_registration_pass_admin_form($form, &$form_state, $id = null) {
       '#required' => true
   );
   
+  $form['description'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Description du pass'),
+    '#default_value' => $lesson instanceof stdClass ? $lesson->description : null,
+    '#required' => false
+  );
+  
   $form['price'] = array(
        '#type' => 'textfield',
        '#title' => t('Prix du pass'),
@@ -51,7 +58,7 @@ function sj_registration_pass_admin_form($form, &$form_state, $id = null) {
   
   $form['currency'] = array(
        '#type' => 'select',
-       '#title' => t('Jour du cours'),
+       '#title' => t('Devise'),
        '#options' => array(
          'EUR' => 'EUR'
        ),
@@ -65,7 +72,7 @@ function sj_registration_pass_admin_form($form, &$form_state, $id = null) {
       '#size' => 50,
       '#maxlength' => 128,
       '#required' => true
-    );
+  );
 
   $form['nb_lessons'] = array(
       '#type' => 'select',
@@ -73,7 +80,7 @@ function sj_registration_pass_admin_form($form, &$form_state, $id = null) {
       '#options'    => array(
           1 => '1',
           2 => '2',
-          'all' => 'tous'
+          'all' => 'tous',
       ),
       '#default_value' => $pass instanceof stdClass ? $pass->nb_lessons : 1
   );
@@ -105,6 +112,7 @@ function sj_registration_pass_admin_submit($form, &$form_state) {
   $values = $form_state['values'];
   $fields = array(
           'name' => $values['name'],
+          'description' => $values['description'],
           'price' => $values['price'],
           'currency' => $values['currency'],
           'year' => $values['year'],
