@@ -868,14 +868,14 @@ function sj_registration_ajax_form($form, &$form_state) {
     // Lessons
     case 3:
       // Provide pricer information
-      $prices = db_select('sj_pricer', 'p')
-            ->fields('p', array())
+      $pricer = db_select('sj_pricer', 'p')
+            ->fields('p')
             ->condition('p.year', get_season_year())
             ->execute()
             ->fetchAll();
       
-      if (count($prices)) {
-        drupal_add_js(array('sj_registration' => array('pricer' => $prices)), 'setting');
+      if (count($pricer)) {
+        drupal_add_js(array('sj_registration' => array('pricer' => $pricer)), 'setting');
         drupal_add_js(array('sj_registration' => array('pass_id' => $form_state['storage']['pass_id'])), 'setting');
       }
       
@@ -1020,8 +1020,7 @@ function sj_registration_ajax_form($form, &$form_state) {
         '#title' => t('Votre adresse:'),
         '#default_value' => isset($form_state['storage']['address']) ? $form_state['storage']['address'] : null,
         '#size' => 50,
-        '#maxlength' => 255,
-        '#required' => true
+        '#maxlength' => 255
       );
       
       $form['postcode'] = array(
@@ -1029,8 +1028,7 @@ function sj_registration_ajax_form($form, &$form_state) {
         '#title' => t('Votre code postal:'),
         '#default_value' => isset($form_state['storage']['postcode']) ? $form_state['storage']['postcode'] : null,
         '#size' => 50,
-        '#maxlength' => 128,
-        '#required' => true
+        '#maxlength' => 128
       );
       
       $form['city'] = array(
@@ -1038,8 +1036,7 @@ function sj_registration_ajax_form($form, &$form_state) {
         '#title' => t('Votre ville:'),
         '#default_value' => isset($form_state['storage']['city']) ? $form_state['storage']['city'] : null,
         '#size' => 50,
-        '#maxlength' => 128,
-        '#required' => true
+        '#maxlength' => 128
       );
       
       $countries = country_get_list();
@@ -1250,7 +1247,8 @@ function sj_registration_ajax_form($form, &$form_state) {
           . '</tbody></table>';
       }
       
-      $price = calculatePrice($pass->price, $form_state['storage']['type']);
+      $base_price = calculateBasePrice($form_state['storage']);
+      $price = calculatePrice($base_price, $form_state['storage']['type']);
       $form_state['storage']['price'] = calculateTotalPrice($price, $is_paypal);
       
       $form['rundown']['#markup'] .= '<h3 class="lobster">' . t('Paiement') . '</h3>'
@@ -1861,20 +1859,64 @@ function isCouple($type) {
   return $type === 'couple';
 }
 
-function calculatePrices($storage, $type) {
+/**
+ * Calculate base price (based on lessons and pass choosen)
+ *
+ * @param array $storage
+ * 
+ * @return int 
+ */
+function calculateBasePrice($storage) {
+  if (!isset($storage['pass_id']) || !isset($storage['lessons'])) {
+    drupal_set_message(t('Erreur lors du calcul des prix. Contactez l\'administrateur'));
+    return;
+  }
   
+  if (count($storage['lessons'])) {
+    $countNormal = 0;
+    $countInvitational = 0;
+    
+    foreach ($storage['lessons'] as $lesson_id) {
+      $lesson = db_select('sj_lessons', 'l')
+              ->fields('l', array('category'))
+              ->condition('l.sjl_id', $lesson_id)
+              ->execute()
+              ->fetch();
+      
+      if ($lesson->category === 'normal') {
+        $countNormal++;
+      } elseif ($lesson->category === 'invitational') {
+        $countInvitational++;
+      }
+    }
+  }
+  
+  $pricer = db_select('sj_pricer', 'p')
+          ->fields('p')
+          ->condition('p.year', get_season_year())
+          ->execute()
+          ->fetchAll();
+  
+  foreach ($pricer as $price) {
+    if ($price->nb_lessons_normal == $countNormal && $price->nb_lessons_invitational == $countInvitational
+            && $price->pass_id == $storage['pass_id']) {
+      return $price->price;
+    }
+  }
+  
+  return 0;
 }
 
 /**
  * Calculate price (without paypal fees)
  *
- * @param integer $pass_price
+ * @param integer $base_price
  * @param string $type
  * 
  * @return float
  */
-function calculatePrice($pass_price, $type) {
-  $price = floatval(get_registration_fee()) + floatval($pass_price);
+function calculatePrice($base_price, $type) {
+  $price = floatval(get_registration_fee()) + floatval($base_price);
   
   if (isCouple($type)) {
     $price = $price * 2;
