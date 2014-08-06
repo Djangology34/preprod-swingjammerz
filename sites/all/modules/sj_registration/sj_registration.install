@@ -479,5 +479,63 @@ function sj_registration_schema() {
     'primary key' => array('id')
   );
   
+  $schema['sj_pricer'] = array(
+    'description' => "Stores price combinations.",
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Unique identifier for a place item.'
+      ),
+      'nb_lessons_normal' => array(
+        'type' => 'int',
+        'size' => 'normal',
+        'not null' => TRUE,
+        'description' => 'The number of normal lesson.'
+      ),
+      'nb_lessons_invitational' => array(
+        'type' => 'int',
+        'size' => 'normal',
+        'not null' => TRUE,
+        'description' => 'The number of invitational lesson.'
+      ),
+      'pass_id' => array(
+        'type' => 'int',
+        'size' => 'normal',
+        'unsigned' => TRUE,
+        'description' => 'Unique identifier for a pass item.'
+      ),
+      'price' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => "The price."
+      ),
+      'currency' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => 'EUR',
+        'description' => "The currency of payment."
+      ),
+      'year' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'The year of the place.'
+      ),
+      'created_at' => array(
+        'description' => 'The creation date timestamp.',
+        'mysql_type' => 'DATETIME',
+        'not null' => TRUE
+      ),
+    ),
+    'foreign keys' => array(
+      'fk_student' => array('table' => 'sj_passes', 'columns' => array('pass_id' => 'sjp_id'))
+    ),
+    'primary key' => array('id')
+  );
+  
   return $schema;
 }

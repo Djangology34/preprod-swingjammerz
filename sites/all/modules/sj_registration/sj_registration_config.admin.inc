@@ -37,6 +37,8 @@ function sj_registration_admin()
           . 'Paiement en ligne: <b>' . get_registration_payment(true) . '</b>'
           . ' - <a href="/admin/config/sj_registration/settings/edit">' . t('Modifier') . '</a><br/>';
   
+  $content .= '<a href="/admin/config/sj_registration/pricer/edit">' . t('Tableau des prix') . '</a><br/>';
+  
   $content .= render_places();
   $content .= render_passes();
   $content .= render_lessons();
