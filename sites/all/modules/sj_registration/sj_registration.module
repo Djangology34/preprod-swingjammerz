@@ -710,6 +710,7 @@ function generate_buttons(array $form, $element, $style = array('default')) {
   foreach($form[$element]['#options'] as $key => $option) {
     $price = null;
     $name = null;
+    
     preg_match('/data-price=\"(.*?)\"/', $option, $price);
     preg_match('/data-name=\"(.*?)\"/', $option, $name);
     
@@ -725,8 +726,10 @@ function generate_buttons(array $form, $element, $style = array('default')) {
   }
   $buttons .= '</div>';
   
+  $form[$element]['#attributes'] = array('data-name' => $name[1]);
+  
   $form[$element]['#prefix'] = isset($form[$element]['#prefix']) ? $form[$element]['#prefix'] .  $buttons : $buttons;
-  $form[$element]['#prefix'] .= '<div class="">';
+  $form[$element]['#prefix'] .= '<div class="hidden">';
   
   $form[$element]['#suffix'] = isset($form[$element]['#suffix']) ? $form[$element]['#suffix'] . '</div>' : '</div>';
   
@@ -864,6 +867,18 @@ function sj_registration_ajax_form($form, &$form_state) {
 
     // Lessons
     case 3:
+      // Provide pricer information
+      $prices = db_select('sj_pricer', 'p')
+            ->fields('p', array())
+            ->condition('p.year', get_season_year())
+            ->execute()
+            ->fetchAll();
+      
+      if (count($prices)) {
+        drupal_add_js(array('sj_registration' => array('pricer' => $prices)), 'setting');
+        drupal_add_js(array('sj_registration' => array('pass_id' => $form_state['storage']['pass_id'])), 'setting');
+      }
+      
       $form['#prefix'] = '<div id="sj_registration_ajax_form"><div id="sj_registration_lessons">';
       $form['#suffix'] = '</div></div>';
       
@@ -923,7 +938,7 @@ function sj_registration_ajax_form($form, &$form_state) {
         
         // Check if the student should be registered to option list
         if (check_lesson_full($lesson, $form_state['storage']['gender'], $form_state['storage']['type'])) {
-          $options[$lesson->sjl_id] = '<span class="lesson-option-list"></span>' . $lesson->name;
+          $options[$lesson->sjl_id] = '<span class="lesson-option-list"></span>' . '<span data-name="' . $lesson->category . '">' . $lesson->name . '</span>';
           
           $form['couple'] = array('#markup' => '<div class="alert alert-danger alert-dismissable">' . t('Attention! Certains cours sont complets. Vous pouvez vous inscrire en liste d\'attente sur ces cours.<br/> Nous vous tiendrons alors informé par mail.') . '</div><br/>');
         } else {
@@ -1844,6 +1859,10 @@ function currency_symbole($currency) {
  */
 function isCouple($type) {
   return $type === 'couple';
+}
+
+function calculatePrices($storage, $type) {
+  
 }
 
 /**

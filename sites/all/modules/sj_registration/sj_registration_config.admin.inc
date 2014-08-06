@@ -107,6 +107,7 @@ function render_pricer() {
   $content .= '<div class="fieldset-wrapper">';
   $content .= '<table><thead><tr>'
           . '<th>#</th>'
+          . '<th>' . t('Description') . '</th>'
           . '<th>' . t('Nombre de cours normal') . '</th>'
           . '<th>' . t('Nombre de cours invitational') . '</th>'
           . '<th>' . t('Pass') . '</th>'
@@ -132,6 +133,7 @@ function render_pricer() {
     
     $content .= '<tr>'
             . '<td>' . $price->id . '</td>'
+            . '<td>' . $price->description . '</td>'
             . '<td>' . $price->nb_lessons_normal . '</td>'
             . '<td>' . $price->nb_lessons_invitational . '</td>'
             . '<td>' . $pass_name . '</td>'

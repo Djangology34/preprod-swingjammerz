@@ -74,21 +74,25 @@
         $('#price-pass').attr('data-price', $button.attr('data-price'));
         $('#price-pass').html($button.attr('data-price'));
       } else if ($('#sj_registration_lessons').length) {
-        console.log('test');
-        var count = $('#sj_registration_lessons :checked').size();
-        console.log(count);
-        if (count === 1) {
-          $('#price-pass').attr('title', '1h cours');
-          $('#price-pass').attr('data-price', '150');
-          $('#price-pass').html('150');
-        } else if (count === 2) {
-          $('#price-pass').attr('title', '2h cours');
-          $('#price-pass').attr('data-price', '230');
-          $('#price-pass').html('230');
-        } else if (count === 0) {
-          $('#price-pass').attr('title', '0h cours');
-          $('#price-pass').attr('data-price', '0');
-          $('#price-pass').html('0');
+        var prices = Drupal.settings.sj_registration.pricer;
+        var passId = Drupal.settings.sj_registration.pass_id;
+        
+        var countNormal = $('#sj_registration_lessons input[data-name="normal"]:checked').size();
+        var countInvitational = $('#sj_registration_lessons input[data-name="invitational"]:checked').size();
+
+        var i;
+        for (i = 0; i < prices.length; i++) { 
+          if (+prices[i].nb_lessons_normal == countNormal && +prices[i].nb_lessons_invitational == countInvitational 
+              && +prices[i].pass_id == +passId) {
+            $('#price-pass').attr('title', prices[i].description);
+            $('#price-pass').attr('data-price', prices[i].price);
+            $('#price-pass').html(prices[i].price);
+            break;
+          } else {
+            $('#price-pass').attr('title', '');
+            $('#price-pass').attr('data-price', 0);
+            $('#price-pass').html(0);
+          }
         }
       }
       
