@@ -39,6 +39,14 @@ function sj_registration_schema() {
         'description' => "What event is it.",
         'translatable' => TRUE
       ),
+      'category' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => "Category of the lesson.",
+        'translatable' => TRUE
+      ),
       'type' => array(
         'type' => 'varchar',
         'length' => 255,

@@ -56,6 +56,16 @@ function sj_registration_lesson_admin_form($form, &$form_state, $id = null) {
        '#default_value' => $lesson instanceof stdClass ? $lesson->event : null
    );
   
+  $form['category'] = array(
+       '#type' => 'select',
+       '#title' => t('Catégorie de l\'évenement'),
+       '#options' => array(
+          'normal' => t('Normal'),
+          'invitational' => t('Invitational')
+       ),
+       '#default_value' => $lesson instanceof stdClass ? $lesson->category : null
+   );
+  
   $form['type'] = array(
        '#type' => 'select',
        '#title' => t('Type de cours'),
@@ -96,7 +106,7 @@ function sj_registration_lesson_admin_form($form, &$form_state, $id = null) {
        '#options' => array(
          'débutant'      => t('Débutant'),
          'intermédiaire' => t('Intermédiaire'),
-         'avancé'        => t('Avancé')
+         'inter-avancé'        => t('Inter-avancé')
        ),
        '#default_value' => $lesson instanceof stdClass ? $lesson->level : null
    );
@@ -241,6 +251,7 @@ function sj_registration_lesson_admin_submit($form, &$form_state) {
       'name' => $values['name'],
       'description' => $values['description'],
       'event' => $values['event'],
+      'category' => $values['category'],
       'type' => $values['type'],
       'day' => $values['day'],
       'time' => $values['time'],

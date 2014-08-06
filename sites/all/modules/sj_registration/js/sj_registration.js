@@ -43,13 +43,6 @@
       e.preventDefault();
       var $button = $(this);
       
-      // Update the pricer
-      if ($button.attr('data-price') && $button.attr('data-name')) {
-        $('#price-pass').attr('title', $button.attr('data-name'));
-        $('#price-pass').attr('data-price', $button.attr('data-price'));
-        $('#price-pass').html($button.attr('data-price'));
-      }
-      
       var active = $button.hasClass('active');
       var checkboxes = $button.attr('data-type') === 'checkboxes';
       var radios = $button.attr('data-type') === 'radios';
@@ -73,6 +66,30 @@
         $button.removeClass('active');
       } else if (!active){
         $button.addClass('active');
+      }
+      
+      // Update the pricer
+      if ($button.attr('data-price') && $button.attr('data-name')) {
+        $('#price-pass').attr('title', $button.attr('data-name'));
+        $('#price-pass').attr('data-price', $button.attr('data-price'));
+        $('#price-pass').html($button.attr('data-price'));
+      } else if ($('#sj_registration_lessons').length) {
+        console.log('test');
+        var count = $('#sj_registration_lessons :checked').size();
+        console.log(count);
+        if (count === 1) {
+          $('#price-pass').attr('title', '1h cours');
+          $('#price-pass').attr('data-price', '150');
+          $('#price-pass').html('150');
+        } else if (count === 2) {
+          $('#price-pass').attr('title', '2h cours');
+          $('#price-pass').attr('data-price', '230');
+          $('#price-pass').html('230');
+        } else if (count === 0) {
+          $('#price-pass').attr('title', '0h cours');
+          $('#price-pass').attr('data-price', '0');
+          $('#price-pass').html('0');
+        }
       }
       
       setTotalPrice();

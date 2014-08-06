@@ -700,7 +700,7 @@ function generate_buttons(array $form, $element, $style = array('default')) {
   $buttons .= '</div>';
   
   $form[$element]['#prefix'] = isset($form[$element]['#prefix']) ? $form[$element]['#prefix'] .  $buttons : $buttons;
-  $form[$element]['#prefix'] .= '<div class="hidden">';
+  $form[$element]['#prefix'] .= '<div class="">';
   
   $form[$element]['#suffix'] = isset($form[$element]['#suffix']) ? $form[$element]['#suffix'] . '</div>' : '</div>';
   
@@ -810,7 +810,7 @@ function sj_registration_ajax_form($form, &$form_state) {
         '#options' => array(
             'débutant'      => t('Débutant'),
             'intermédiaire' => t('Intermédiaire'),
-            'avancé'        => t('Avancé')
+            'inter-avancé'  => t('Inter-avancé')
         ),
         '#required' => TRUE
       );
@@ -823,7 +823,7 @@ function sj_registration_ajax_form($form, &$form_state) {
       
       $options = array();
       foreach ($passes as $pass) {
-        $options[$pass->sjp_id] = $pass->name . '<br/><span data-name="' . $pass->name . '" data-price="' . $pass->price . '">' . $pass->price . ' ' . $currency . '</span>';
+        $options[$pass->sjp_id] = '<span class="registration-tipsy" title="' . $pass->description . '">'. $pass->name . '</span><br/><span data-name="' . $pass->name . '" data-price="' . $pass->price . '">' . $pass->price . ' ' . $currency . '</span>';
       }
       
       $form['pass_id'] = array(
@@ -838,7 +838,8 @@ function sj_registration_ajax_form($form, &$form_state) {
 
     // Lessons
     case 3:
-      $form['#prefix'] = '<div id="sj_registration_ajax_form">';
+      $form['#prefix'] = '<div id="sj_registration_ajax_form"><div id="sj_registration_lessons">';
+      $form['#suffix'] = '</div></div>';
       
       $form_state['storage']['lessons'] = null;
       
@@ -900,7 +901,7 @@ function sj_registration_ajax_form($form, &$form_state) {
           
           $form['couple'] = array('#markup' => '<div class="alert alert-danger alert-dismissable">' . t('Attention! Certains cours sont complets. Vous pouvez vous inscrire en liste d\'attente sur ces cours.<br/> Nous vous tiendrons alors informé par mail.') . '</div><br/>');
         } else {
-          $options[$lesson->sjl_id] = $lesson->name;
+          $options[$lesson->sjl_id] = '<span data-name="' . $lesson->category . '">' . $lesson->name . '</span>';
         }
       }
       
