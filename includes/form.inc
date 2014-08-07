@@ -3214,11 +3214,6 @@ function form_process_checkboxes($element) {
       if ($key === 0) {
         $key = '0';
       }
-      
-      $count_price = preg_match('/data-price=\"(.*?)\"/', $choice, $price);
-      $count_name = preg_match('/data-name=\"(.*?)\"/', $choice, $name);
-      $count_status = preg_match('/data-status=\"(.*?)\"/', $choice, $status);
-      
       // Maintain order of options as defined in #options, in case the element
       // defines custom option sub-elements, but does not define all option
       // sub-elements.
@@ -3234,18 +3229,6 @@ function form_process_checkboxes($element) {
         '#ajax' => isset($element['#ajax']) ? $element['#ajax'] : NULL,
         '#weight' => $weight,
       );
-      
-      if ($count_price) {
-        $element[$key]['#attributes']['data-price'] = $price[1];
-      }
-      
-      if ($count_name) {
-        $element[$key]['#attributes']['data-name'] = $name[1];
-      }
-      
-      if ($count_status) {
-        $element[$key]['#attributes']['data-status'] = $status[1];
-      }
     }
   }
   return $element;

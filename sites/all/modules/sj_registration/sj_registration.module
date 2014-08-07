@@ -901,7 +901,7 @@ function generate_buttons(array $form, $element, $style = array('default')) {
   $buttons .= '</div>';
   
   $form[$element]['#prefix'] = isset($form[$element]['#prefix']) ? $form[$element]['#prefix'] .  $buttons : $buttons;
-  $form[$element]['#prefix'] .= '<div class="hidden">';
+  $form[$element]['#prefix'] .= '<div class="">';
   
   $form[$element]['#suffix'] = isset($form[$element]['#suffix']) ? $form[$element]['#suffix'] . '</div>' : '</div>';
   
@@ -1070,12 +1070,12 @@ function sj_registration_ajax_form($form, &$form_state) {
       }
       
       $pass = db_select('sj_passes', 'p')
-              ->fields('p', array('sjp_id', 'nb_lessons'))
+              ->fields('p', array('sjp_id'))
               ->condition('sjp_id', $form_state['storage']['pass_id'])
               ->execute()
               ->fetch();
       
-      if(!$pass) {
+      if(!$pass instanceof stdClass) {
         drupal_set_message(t('Formulaire d\'inscription momentanément indisponible...'), 'error');
         
         drupal_goto('');
@@ -1098,14 +1098,12 @@ function sj_registration_ajax_form($form, &$form_state) {
         }
       }
       
-      $nb_lessons = $pass->nb_lessons === 'all' ? 'les' : $pass->nb_lessons;
-      
       $form['lessons'] = array(
         '#type' => 'checkboxes',
-        '#theme' => 'sjamelia_checkboxes',
-        '#prefix' => '<label class="label-title">' . t('Choisissez @nb_lessons cours auquel vous souhaitez vous inscrire:', array('@nb_lessons' => $nb_lessons)) . '</label>',
+        '#prefix' => '<label class="label-title">' . t('Choisissez les cours auxquels vous souhaitez vous inscrire:') . '</label>',
         '#options' => $options,
-        '#required' => TRUE
+        '#default_value' => null,
+        '#process' => array('sj_registration_form_process_checkboxes')
       );
       
       break;
@@ -1482,6 +1480,67 @@ function sj_registration_ajax_form($form, &$form_state) {
 }
 
 /**
+ * Implement form_process_checkboxes
+ *
+ * @param type $element
+ * @return type 
+ */
+function sj_registration_form_process_checkboxes($element) {
+  $value = is_array($element['#value']) ? $element['#value'] : array();
+  $element['#tree'] = TRUE;
+  
+  if (count($element['#options']) > 0) {
+    if (!isset($element['#default_value']) || $element['#default_value'] == 0) {
+      $element['#default_value'] = array();
+    }
+    $weight = 0;
+    foreach ($element['#options'] as $key => $choice) {
+      // Integer 0 is not a valid #return_value, so use '0' instead.
+      // @see form_type_checkbox_value().
+      // @todo For Drupal 8, cast all integer keys to strings for consistency
+      //   with form_process_radios().
+      if ($key === 0) {
+        $key = '0';
+      }
+
+      $count_price = preg_match('/data-price=\"(.*?)\"/', $choice, $price);
+      $count_name = preg_match('/data-name=\"(.*?)\"/', $choice, $name);
+      $count_status = preg_match('/data-status=\"(.*?)\"/', $choice, $status);
+      
+      // Maintain order of options as defined in #options, in case the element
+      // defines custom option sub-elements, but does not define all option
+      // sub-elements.
+      $weight += 0.001;
+
+      $element += array($key => array());
+      $element[$key] += array(
+        '#type' => 'checkbox',
+        '#title' => $choice,
+        '#return_value' => $key,
+        '#default_value' => isset($value[$key]) ? $key : NULL,
+        '#attributes' => $element['#attributes'],
+        '#ajax' => isset($element['#ajax']) ? $element['#ajax'] : NULL,
+        '#weight' => $weight,
+      );
+return $element;
+      if ($count_price) {
+        $element[$key]['#attributes']['data-price'] = $price[1];
+      }
+      
+      if ($count_name) {
+        $element[$key]['#attributes']['data-name'] = $name[1];
+      }
+      
+      if ($count_status) {
+        $element[$key]['#attributes']['data-status'] = $status[1];
+      }
+    }
+  }
+  
+  return $element;
+}
+
+/**
  * Implements Registration ajax form hook_validate()
  *
  * @param type $form
@@ -1510,8 +1569,14 @@ function sj_registration_ajax_form_validate($form, &$form_state)
         drupal_set_message(t('Veuillez choisir au moins un cours'), 'error');
       } else {
         $count_normal = 0;
-        foreach($lessons as $lesson) {
-          if ($lesson->category === 'normal') {
+        foreach($lessons as $lesson_id) {
+          $lesson = db_select('sj_lessons', 'l')
+                  ->fields('l', array('category'))
+                  ->condition('l.sjl_id', $lesson_id)
+                  ->execute()
+                  ->fetch();
+          
+          if ($lesson instanceof stdClass && $lesson->category === 'normal') {
             $count_normal++;
           }
         }
