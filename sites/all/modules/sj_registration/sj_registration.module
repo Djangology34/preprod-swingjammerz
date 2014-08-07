@@ -1189,8 +1189,8 @@ function sj_registration_ajax_form($form, &$form_state) {
       foreach ($lessons as $lesson) {
         $display_lessons .= $lesson->name;
         
-        if (check_lesson_availability($lesson, $form_state['storage']['gender'], $form_state['storage']['type'])) {
-          $display_lessons .= '<span class="red"> (' . t('Option') . ')</span>';
+        if (!check_lesson_availability($lesson, $form_state['storage']['gender'], $form_state['storage']['type'])) {
+          $display_lessons .= '<span class="red"> (' . t('Liste d\'attente') . ')</span>';
         }
         
         $display_lessons .= '<br/>';
@@ -1416,9 +1416,6 @@ function sj_registration_ajax_form_submit($form, &$form_state) {
     $form_state['step']++;
   // Final step submit
   } elseif(isset($form_state['values']['submit']) && $form_state['values']['op'] == $form_state['values']['submit']) {
-    $payment_method = $form_state['storage']['payment_method'];
-    $waiting_list = $payment_method === 'cheque' ? 1 : 0;
-    
     // Insert student
     $student_id = db_insert('sj_students')
             ->fields(array(
@@ -1433,7 +1430,6 @@ function sj_registration_ajax_form_submit($form, &$form_state) {
                 'country' => $form_state['storage']['country'],
                 'pass_id' => $form_state['storage']['pass_id'],
                 'payment_method' => $form_state['storage']['payment_method'],
-                'waiting_list' => $waiting_list,
                 'registered_last_year' => $form_state['storage']['registered_last_year'],
                 'price' => $form_state['storage']['price'],
                 'currency' => $form_state['storage']['currency'],
@@ -1458,7 +1454,6 @@ function sj_registration_ajax_form_submit($form, &$form_state) {
                 'country' => $form_state['storage']['couple_country'],
                 'pass_id' => $form_state['storage']['pass_id'],
                 'payment_method' => $form_state['storage']['payment_method'],
-                'waiting_list' => $waiting_list,
                 'registered_last_year' => $form_state['storage']['couple_registered_last_year'],
                 'price' => $form_state['storage']['price'],
                 'currency' => $form_state['storage']['currency'],
@@ -1483,13 +1478,13 @@ function sj_registration_ajax_form_submit($form, &$form_state) {
               ->execute()
               ->fetch();
 
-      $is_full = check_lesson_availability($lesson, $form_state['storage']['gender'], $form_state['storage']['type']);
+      $is_available = check_lesson_availability($lesson, $form_state['storage']['gender'], $form_state['storage']['type']);
 
       $query = db_insert('sj_students_lessons')
             ->fields(array(
                 'sj_student_id' => $student_id,
                 'sj_lesson_id' => $lesson_id,
-                'option_list' => $is_full,
+                'waiting_list' => !$is_available ? 1 : 0,
                 'created_at' => format_date(time(), 'custom', 'Y-m-d H:i:s')
             ))
             ->execute();
@@ -1499,27 +1494,28 @@ function sj_registration_ajax_form_submit($form, &$form_state) {
               ->fields(array(
                   'sj_student_id' => $couple_id,
                   'sj_lesson_id' => $lesson_id,
-                  'option_list' => $is_full,
+                  'waiting_list' => !$is_available ? 1 : 0,
                   'created_at' => format_date(time(), 'custom', 'Y-m-d H:i:s')
               ))
               ->execute();
       }
 
-      // Automatically register one on option_list if any
-      if (!$is_full) {
+      // No need anymore of automatically register people on waiting_list
+      // Automatically register one on waiting_list if any
+      /*if (!$is_full) {
         $opposite_gender = $form_state['storage']['gender'] === 'masculin' ? 'féminin' : 'masculin';
         $opposite_gender_is_full = check_lesson_availability($lesson, $opposite_gender, $form_state['storage']['type']);
 
         if ($opposite_gender_is_full) {
-          $query = db_query("UPDATE {sj_students_lessons} sl SET sl.option_list = :false 
-              WHERE sl.sj_lesson_id = :lesson_id AND sl.option_list = :true 
+          $query = db_query("UPDATE {sj_students_lessons} sl SET sl.waiting_list = :false 
+              WHERE sl.sj_lesson_id = :lesson_id AND sl.waiting_list = :true 
               ORDER BY sl.created_at ASC LIMIT 1;", array(
                   ':false' => 0,
                   ':lesson_id' => $lesson->sjl_id,
                   ':true' => 1
           ));
         }
-      }
+      }*/
     }
     
     if ($form_state['storage']['payment_method'] === 'paypal') {
@@ -1740,15 +1736,31 @@ function check_availability($lesson) {
   $query = db_select('sj_students', 's');
   $query->leftJoin('sj_students_lessons', 'sl', 'sl.sj_student_id = s.sjs_id');
 
-  $students = $query->fields('s', array('sjs_id', 'payment_method', 'waiting_list', 'gender'))
+  $students = $query->fields('s', array('sjs_id', 'payment_method', 'gender'))
           ->condition('sl.sj_lesson_id', $lesson->sjl_id)
           ->condition('s.enabled', true)
           ->execute()
           ->fetchAll();
 
+  $students_lessons = db_select('sj_students_lessons', 'sl')
+          ->fields('sl')
+          ->condition('sl.sj_lesson_id', $lesson->sjl_id)
+          ->execute()
+          ->fetchAll();
+  
+  $count_waiting_list = 0;
+  if (count($students_lessons)) {
+    foreach($students_lessons as $student_lesson) {
+      if ($student_lesson->waiting_list) {
+        $count_waiting_list++;
+      }
+    }
+  }
+  
   $result = array(
-      'leader' => array('count' => 0, 'availability' => 0, 'waiting_list' => 0 , 'cheque' => 0),
-      'follower' => array('count' => 0, 'availability' => 0, 'waiting_list' => 0 , 'cheque' => 0)
+      'waiting_list' => $count_waiting_list,
+      'leader' => array('count' => 0, 'availability' => 0, 'cheque' => 0),
+      'follower' => array('count' => 0, 'availability' => 0, 'cheque' => 0)
   );
 
   if (count($students)) {
@@ -1759,19 +1771,11 @@ function check_availability($lesson) {
         if ($student->payment_method === 'cheque') {
           $result['leader']['cheque']++;
         }
-        
-        if ($student->waiting_list) {
-          $result['leader']['waiting_list']++;
-        }
       } else {
         $result['follower']['count']++;
         
         if ($student->payment_method === 'cheque') {
           $result['follower']['cheque']++;
-        }
-        
-        if ($student->waiting_list) {
-          $result['follower']['waiting_list']++;
         }
       }
     }
@@ -1780,7 +1784,6 @@ function check_availability($lesson) {
   if ($lesson->type === 'solo') {
     $result['leader']['count'] = $result['leader']['count'] + $result['follower']['count'];
     $result['leader']['cheque'] = $result['leader']['cheque'] + $result['follower']['cheque'];
-    $result['leader']['waiting_list'] = $result['leader']['waiting_list'] + $result['follower']['waiting_list'];
   }
   
   $result['leader']['availability'] = $lesson->max_capacity_leader - $result['leader']['count']; 

@@ -190,12 +190,6 @@ function sj_registration_student_admin_form($form, &$form_state, $id) {
     '#default_value' => $student instanceof stdClass ? $student->payed : 1,
   );
   
-  $form['waiting_list'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Est sur liste d\'attente'),
-    '#default_value' => $student instanceof stdClass ? $student->waiting_list : 0,
-  );
-  
   $form['enabled'] = array(
     '#type' => 'checkbox',
     '#title' => t('Actif'),
@@ -235,7 +229,6 @@ function sj_registration_student_admin_submit($form, &$form_state) {
       'pass_id' => $values['pass_id'],
       'payed' => $values['payed'],
       'payment_method' => $values['payment_method'],
-      'waiting_list' => $values['waiting_list'],
       'enabled' => $values['enabled']
   );
   

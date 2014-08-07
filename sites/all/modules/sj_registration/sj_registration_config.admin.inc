@@ -242,8 +242,9 @@ function render_lessons($event = 'cours') {
           . '<th>' . t('Places max cavalière') . '</th>'
           . '<th>' . t('Places restantes cavalier') . '</th>'
           . '<th>' . t('Places restantes cavalière') . '</th>'
+          . '<th>' . t('Nombre d\'inscrit en liste d\'attente') . '</th>'
           . '<th>' . t('Année') . '</th>'
-          . '<th class="center">' . t('Plein') . '</th>'
+          . '<th class="center">' . t('Disponible') . '</th>'
           . '<th class="center">' . t('Actif') . '</th>'
           . '<th class="center">' . t('Editer') . '</th>'
           . '<th class="center">' . t('Supprimer') . '</th>'
@@ -278,8 +279,9 @@ function render_lessons($event = 'cours') {
             . '<td>' . $lesson_fee . ' ' . get_currency(true) . '</td>'
             . '<td>' . $lesson->max_capacity_leader . '</td>'
             . '<td>' . $lesson->max_capacity_follower . '</td>'
-            . '<td><span class="tipsy underlined pointer" title="nb d\'inscrits: ' . $lesson_datas['leader']['count'] . ' - paiement par cheque: ' . $lesson_datas['leader']['cheque'] . ' - liste d\'attente: ' . $lesson_datas['leader']['waiting_list'] . '"><b>' . $lesson_datas['leader']['availability'] . '</b></span></td>'
-            . '<td><span class="tipsy underlined pointer" title="nb d\'inscrits: ' . $lesson_datas['follower']['count'] . ' - paiement par cheque: ' . $lesson_datas['follower']['cheque'] . ' - liste d\'attente: ' . $lesson_datas['follower']['waiting_list'] . '"><b>' . $lesson_datas['follower']['availability'] . '</b></span></td>'
+            . '<td><span class="tipsy underlined pointer" title="nb d\'inscrits: ' . $lesson_datas['leader']['count'] . ' - paiement par cheque: ' . $lesson_datas['leader']['cheque'] . '"><b>' . $lesson_datas['leader']['availability'] . '</b></span></td>'
+            . '<td><span class="tipsy underlined pointer" title="nb d\'inscrits: ' . $lesson_datas['follower']['count'] . ' - paiement par cheque: ' . $lesson_datas['follower']['cheque'] . '"><b>' . $lesson_datas['follower']['availability'] . '</b></span></td>'
+            . '<td>' . $lesson_datas['waiting_list'] . '</td>'
             . '<td>' . $lesson->year . '</td>'
             . '<td class="center"><img width="20px" src="http://' . $_SERVER['HTTP_HOST'] . '/sites/all/themes/sjamelia/assets/images/icon/' . $full_icon . '" /></td>'
             . '<td class="center"><img width="20px" src="http://' . $_SERVER['HTTP_HOST'] . '/sites/all/themes/sjamelia/assets/images/icon/' . $enabled_icon . '" /></td>'
@@ -368,9 +370,8 @@ function render_students_per_lessons($event = 'cours') {
 
       $students = $query->fields('s')
               ->condition('sl.sj_lesson_id', $lesson->sjl_id)
+              ->orderBy('sl.waiting_list', 'DESC')
               ->orderBy('payed', 'DESC')
-              ->orderBy('waiting_list', 'DESC')
-              ->orderBy('sl.option_list', 'DESC')
               ->orderBy('lastname', 'ASC')
               ->execute()
               ->fetchAll();
@@ -404,11 +405,10 @@ function render_student_table($details = true) {
           . '<th>' . t('Adresse') . '</th>'
           . '<th>' . t('Pass') . '</th>'
           . '<th>' . t('Méthode de paiement') . '</th>'
-          . '<th>' . t('Payé') . '</th>'
-          . '<th>' . t('Liste d\'attente') . '</th>';
+          . '<th>' . t('Payé') . '</th>';
   
   if (!$details) {
-    $content .= '<th>' . t('Liste d\'option') . '</th>';
+    $content .= '<th>' . t('Liste d\'attente') . '</th>';
   }
   
   $content .= '<th>' . t('En couple') . '</th>'
@@ -464,19 +464,18 @@ function display_students(array $students, $event = 'cours', $details = true, $l
     $couple_name = isset($couple) && $couple instanceof stdClass ? $couple->firstname . ' ' . $couple->lastname : '-';
     
     $payed_icon = $student->payed ? 'success.png' : 'stop.png';
-    $waiting_list_icon = $student->waiting_list ? 'success.png' : 'stop.png';
     $registered_last_year_icon = $student->registered_last_year ? 'success.png' : 'stop.png';
     $enabled_icon = $student->enabled ? 'success.png' : 'stop.png';
 
     if ($lesson instanceof stdClass) {
       $registration = db_select('sj_students_lessons', 'sl')
-              ->fields('sl', array('option_list'))
+              ->fields('sl', array('waiting_list'))
               ->condition('sj_student_id', $student->sjs_id)
               ->condition('sj_lesson_id', $lesson->sjl_id)
               ->execute()
               ->fetch();
       
-      $option_list_icon = $registration->option_list ? 'success.png' : 'stop.png';
+      $waiting_list_icon = $registration->waiting_list ? 'success.png' : 'stop.png';
     }
     
     $query = db_select('sj_lessons', 'l');
@@ -508,11 +507,10 @@ function display_students(array $students, $event = 'cours', $details = true, $l
             . '<td>' . $student->address . ' ' . $student->postcode . ' ' . $student->city . ' ' . $student->country . '</td>'
             . '<td>' . $pass_name . '</td>'
             . '<td>' . $student->payment_method . '</td>'
-            . '<td class="center"><img width="20px" src="http://' . $_SERVER['HTTP_HOST'] . '/sites/all/themes/sjamelia/assets/images/icon/' . $payed_icon . '" /></td>'
-            . '<td class="center"><img width="20px" src="http://' . $_SERVER['HTTP_HOST'] . '/sites/all/themes/sjamelia/assets/images/icon/' . $waiting_list_icon . '" /></td>';
+            . '<td class="center"><img width="20px" src="http://' . $_SERVER['HTTP_HOST'] . '/sites/all/themes/sjamelia/assets/images/icon/' . $payed_icon . '" /></td>';
     
-    if (isset($option_list_icon) && $option_list_icon) {
-      $content .= '<td class="center"><img width="20px" src="http://' . $_SERVER['HTTP_HOST'] . '/sites/all/themes/sjamelia/assets/images/icon/' . $option_list_icon . '" /></td>';
+    if (isset($waiting_list_icon) && $waiting_list_icon) {
+      $content .= '<td class="center"><img width="20px" src="http://' . $_SERVER['HTTP_HOST'] . '/sites/all/themes/sjamelia/assets/images/icon/' . $waiting_list_icon . '" /></td>';
     }
     
     $content .= '<td>' . $couple_name . '</td>'

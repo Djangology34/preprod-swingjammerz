@@ -237,14 +237,6 @@ function sj_registration_schema() {
         'default' => '',
         'description' => "The payment method of student."
       ),
-      'waiting_list' => array(
-        'type' => 'int',
-        'size' => 'tiny',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
-        'description' => "Is the student on waiting list."
-      ),
       'registered_last_year' => array(
         'type' => 'int',
         'size' => 'tiny',
@@ -385,7 +377,7 @@ function sj_registration_schema() {
         'not null' => TRUE,
         'description' => 'Unique identifier for a lesson item.'
       ),
-      'option_list' => array(
+      'waiting_list' => array(
         'type' => 'int',
         'size' => 'tiny',
         'unsigned' => TRUE,
