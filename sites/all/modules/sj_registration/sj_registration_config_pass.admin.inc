@@ -78,9 +78,8 @@ function sj_registration_pass_admin_form($form, &$form_state, $id = null) {
       '#type' => 'select',
       '#title' => t('Nombre de lessons permis pour le pass'),
       '#options'    => array(
-          1 => '1',
-          2 => '2',
-          'all' => 'tous',
+          'no'  => 'aucun',
+          'all' => 'tous'
       ),
       '#default_value' => $pass instanceof stdClass ? $pass->nb_lessons : 1
   );

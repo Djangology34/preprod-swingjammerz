@@ -90,6 +90,14 @@ function sj_registration_menu() {
     'access arguments' => array('administer site configuration')
   );
   
+  $items['admin/config/sj_registration/environment/edit'] = array(
+    'title' => t('Swing Jammerz - Editer l\'environnement'),
+    'description' => 'Swing Jammerz - Editer l\'environnement',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sj_registration_environment_admin_form'),
+    'access arguments' => array('administer site configuration')
+  );
+  
   // Pass Management
   $items['admin/config/sj_registration/pass/new'] = array(
     'title' => t('Swing Jammerz - Créer un pass'),
@@ -223,6 +231,118 @@ function sj_registration_menu() {
   return $items;
 }
 
+// Mailer
+
+/**
+ * Implements hook_mail()
+ *
+ * @param string $key
+ * @param array $message
+ * @param array $params 
+ */
+function sj_registration_mail ($key, array &$message, array $params) {
+  $message['to'] = get_registration_environment() === 'test' ? 'tavani.david@gmail.com' : $message['to'];
+  $student = $params['student'];
+  
+  $pass = db_select('sj_passes', 'p')
+        ->fields('p', array('name'))
+        ->condition('p.sjp_id', $student->pass_id)
+        ->execute()
+        ->fetch();
+
+  $query = db_select('sj_lessons', 'l');
+  $query->join('sj_students_lessons', 'sl', 'sl.sj_lesson_id = l.sjl_id');
+
+  $lessons = $query->fields('l', array('name'))
+          ->fields('l')
+          ->condition('sl.sj_student_id', $student->sjs_id)
+          ->execute()
+          ->fetchAll();
+
+  if (count($lessons)) {
+    $list_lessons = '';
+    foreach ($lessons as $lesson) {
+      $lesson_status = db_select('sj_students_lessons', 'sl')
+              ->fields('sl', array('waiting_list'))
+              ->condition('sl.sj_student_id', $student->sjs_id)
+              ->condition('sl.sj_lesson_id', $lesson->sjl_id)
+              ->execute()
+              ->fetch();
+      
+      $list_lessons .= $lesson->name;
+      
+      if ($lesson_status->waiting_list) {
+        $list_lessons .= ' <span style="color:#911821">(Liste d\'attente)</span>';
+      }
+      
+      $list_lessons .= '<br/>';
+    }
+  }
+  
+  switch ($key) {
+    case 'registration_paypal_success':
+      $message['subject'] = t('Inscription validée (paypal)');
+      $message['body'][] = '<p>' . t('Bonjour @username,', array('@username' => $student->firstname)) . '</p><br/>'
+          . t('<p>Votre paiement a été pris en compte. Votre inscription est désormais validée, félicitations !</p><p>Au plaisir de vous retrouver dans les cours.</p>'
+          . t('Voici la liste des cours que vous avez choisis') . ': <br/>' . $list_lessons
+          . '<br/><br/>Le staff SwingJammerz');
+      break;
+    case 'registration_paypal_fail':
+      $message['subject'] = t('Inscription non confirmée (échec paypal)');
+      $message['body'][] = '<p>' . t('Bonjour @username,', array('@username' => $student->firstname)) . '</p><br/>'
+        . t('<p>Attention, votre paiement paypal a échoué. Essayez un autre mode de paiement pour finaliser votre inscription. Dans l\'attente de votre paiement, votre inscription ne peut être prise en compte.</p><br/><br/>
+        Le staff SwingJammerz');
+      break;
+    case 'registration_cheque_success':
+      $message['subject'] = t('Inscription validée (chèque)');
+      $message['body'][] = '<p>' . t('Bonjour @username,', array('@username' => $student->firstname)) . '</p>'
+        . t('Votre inscription a été prise en compte. Merci d\'envoyer votre chèque à l\'adresse suivante : Chez Virgile HELIAS Association SwingJammerz 18, rue de Louvain, résidence les Roses, Bât B6 34000 Montpellier à l\'ordre de l\'association Swingjammerz avant le 7 septembre 2014. 
+        En l\'absence de courrier vous devrez vous présenter avec le chèque du montant des cours que vous avez choisis lors du premier cours. En absence de paiement (envoi postal ou remise du chèque au premier cours), votre inscription sera nulle et votre place réattribuée.') . '<br/>'
+        . t('Voici la liste des cours que vous avez choisis') . ': <br/>' . $list_lessons
+        . '<br/><br/>Le staff SwingJammerz';
+      break;
+    case 'registration_waiting_list':
+      $message['subject'] = t('Inscription sur liste d\'attente');
+      $message['body'][] = '<p>' . t('Bonjour @username,', array('@username' => $student->firstname)) . '</p><br/>'
+        . t('Nous sommes navrés le cours que vous avez choisi est complet ou présente un trop fort déséquilibre entre le nombre de cavaliers et le nombre de cavalières. Nous gardons votre demande d\'inscription précieusement et nous vous contacterons personnellement si une place devait se libérer.<br/><br/>
+        Le staff SwingJammerz');
+      break;
+    case 'registration_admin':
+      $couple_text = '';
+      if ($student->couple_id) {
+        $couple = db_select('sj_students', 's')
+                ->fields('s', array('firstname', 'lastname'))
+                ->condition('s.sjs_id', $student->couple_id)
+                ->execute()
+                ->fetch();
+        
+        $couple_text = '<b>Inscrit en couple avec</b> ' . $couple->firstname . ' ' . $couple->lastname . '<br/>';
+      }
+      
+      $registered_last_year = $student->registered_last_year ? 'Oui' : 'Non';
+      $payed = $student->payed ? 'Oui' : 'Non';
+      
+      $message['subject'] = 'Une nouvelle inscription vient d\'etre effectuée';
+      $message['body'][] = '<p>Une nouvelle inscription est faite, voici le détail:</p><br/>'
+          . '<b>Nom et prénom:</b> ' . $student->firstname . ' ' . $student->lastname . '<br/>'
+          . '<b>Sexe:</b> ' . $student->gender . '<br/>'
+          . $couple_text
+          . '<b>Adresse email:</b> ' . $student->email . '<br/>'
+          . '<b>Téléphone:</b> ' . $student->phone . '<br/>'
+          . '<b>Adresse:</b> ' . $student->address . ' ' . $student->postcode . ' ' . $student->city . ' ' . $student->country . '<br/>'
+          . '<b>Pass choisi:</b> ' . $pass->name . '<br/>'
+          . '<b>Liste des cours choisis:</b><br/>' . $list_lessons
+          . '<b>Méthode de paiement:</b> ' . $student->payment_method . '<br/>'
+          . '<b>Prix payé:</b> ' . $student->price . ' ' . get_currency(true) . '<br/>'
+          . '<b>A payé:</b> ' . $payed . '<br/>'
+          . '<b>Inscrit l\'année dernière:</b> ' . $registered_last_year . '<br/>'
+          . '<b>Langue:</b> ' . $student->language;
+      break;
+  }
+}
+
+// Registration callback pages
+
 /**
  * Registration Paypal callback page
  *
@@ -234,12 +354,13 @@ function sj_registration_paypal_callback() {
     $query->join('sj_students_lessons', 'sl', 'sl.sj_lesson_id = l.sjl_id');
     
     $lessons = $query->fields('l', array('name'))
+            ->fields('l')
             ->condition('sl.sj_student_id', $_GET['cm'])
             ->execute()
             ->fetchAll();
     
     $student = db_select('sj_students', 's')
-            ->fields('s', array('couple_id'))
+            ->fields('s')
             ->condition('sjs_id', $_GET['cm'])
             ->execute()
             ->fetch();
@@ -261,10 +382,25 @@ function sj_registration_paypal_callback() {
     
       $text .= '<ul class="list-style-none">';
       foreach ($lessons as $lesson) {
-        $text .= '<li>' . $lesson->name . '</li>';
+        $lesson_status = db_select('sj_students_lessons', 'sl')
+                ->fields('sl', array('waiting_list'))
+                ->condition('sl.sj_lesson_id', $lesson->sjl_id)
+                ->condition('sl.sj_student_id', $student->sjs_id)
+                ->execute()
+                ->fetch();
+        
+        $text .= '<li>' . $lesson->name;
+        if ($lesson_status instanceof stdClass && $lesson_status->waiting_list) {
+          $text .= ' <span class="red">(Liste d\'attente)</span>';
+        }
+        
+        $text .= '</li>';
       }
       $text .= '</ul></div>';
-
+      
+      drupal_mail('sj_registration', 'registration_paypal_success', $student->email, 'fr', array('student' => $student), 'contact@swingjammerz.com', $send = TRUE);
+      drupal_mail('sj_registration', 'registration_admin', get_registration_admin_email(), 'fr', array('student' => $student), 'contact@swingjammerz.com', $send = TRUE);
+      
       return $text;
     } else {
       watchdog('sj_registration', 'sj_registration_paypal_callback_error', NULL);
@@ -273,28 +409,7 @@ function sj_registration_paypal_callback() {
   } else {
     watchdog('sj_registration', 'sj_registration_paypal_callback_payment_failed', NULL);
     
-    return drupal_set_message(variable_get('payment_not_received_message', 'Le paiement a échoué!'), 'error');
-  }
-}
-
-// Mailer
-
-/**
- * Implements hook_mail()
- *
- * @param type $key
- * @param type $message
- * @param type $params 
- */
-function sj_registration_mail ($key, &$message, $params) {
-  switch ($key) {
-    case 'registration-cheque':
-      // Set headers etc
-      $message['to'] = 'tavani.david@gmail.com';
-      $message['subject'] = t('Hello');
-      $message['body'][] = t('Hello @username,', array('@username' => $params['username']));
-      $message['body'][] = t('The main part of the message.');
-      break;
+    return '<p class="center margin-bottom">' . t('Paiement échoué.<br/><br/>Merci de prendre contact avec l\'administrateur') . '</p>';
   }
 }
 
@@ -469,6 +584,58 @@ function sj_registration_settings_admin_submit($form, &$form_state) {
   variable_set('registration_payment', $form_state['values']['registration_payment']);
   
   drupal_set_message(t('L\' inscription est @settings - Le paiement en ligne est @payment'), array('@settings' => get_registration_settings(true), '@payment' => get_registration_payment(true)));
+  
+  drupal_goto('/admin/config/sj_registration');
+}
+
+/**
+ * Edit registration environment hook_form()
+ *
+ * @param type $form
+ * @param type $form_state
+ * 
+ * @return array $form 
+ */
+function sj_registration_environment_admin_form($form, &$form_state) {
+  $form['registration_environment'] = array(
+    '#type' => 'select',
+    '#title' => t('Choisissez l\'environnement'),
+    '#options' => array(
+        'production' => 'production',
+        'test' => 'test'
+    ),
+    '#default_value' => get_registration_environment()
+  );
+  
+  $form['registration_admin_email'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Email de l\'administrateur'),
+    '#default_value' => get_registration_admin_email(),
+    '#size' => 50,
+    '#maxlength' => 128,
+    '#required' => true
+  );
+  
+  $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => 'Mettre à jour',
+      '#submit' => array('sj_registration_environment_admin_submit'),
+  );
+ 
+  return $form;
+}
+
+/**
+ * Registration environment save in config variables hook_submit()
+ *
+ * @param type $form
+ * @param type $form_state 
+ */
+function sj_registration_environment_admin_submit($form, &$form_state) {
+  variable_set('registration_environment', $form_state['values']['registration_environment']);
+  variable_set('registration_admin_email', $form_state['values']['registration_admin_email']);
+  
+  drupal_set_message(t('L\'environnement est actuellement en @env et l\'email de l\'administrateur est @email'), array('@env' => get_registration_environment(), '@email' => get_registration_admin_email()));
   
   drupal_goto('/admin/config/sj_registration');
 }
@@ -1342,18 +1509,25 @@ function sj_registration_ajax_form_validate($form, &$form_state)
       if (!count($lessons)) {
         drupal_set_message(t('Veuillez choisir au moins un cours'), 'error');
       } else {
+        $count_normal = 0;
+        foreach($lessons as $lesson) {
+          if ($lesson->category === 'normal') {
+            $count_normal++;
+          }
+        }
+        
         $pass = db_select('sj_passes', 'p')
               ->fields('p', array('sjp_id', 'nb_lessons'))
               ->condition('sjp_id', $form_state['storage']['pass_id'])
               ->execute()
               ->fetch();
 
-        if ($pass->nb_lessons !== 'all' && count($lessons) > intval($pass->nb_lessons)) {
+        if ($pass->nb_lessons === 'no' && $count_normal > 2) {
           // Reset the lessons selected
           $form_state['storage']['lessons'] = array();
           $form_state['values']['lessons'] = array();
 
-          form_set_error('lessons', t('Vous devez choisir maximum @nb_lessons cours', array('@nb_lessons' => $pass->nb_lessons)));
+          form_set_error('lessons', t('Pour vous inscrire à plus de 2 cours normaux (invitational non compris), vous devez cliquer sur le bouton retour et choisir un Pass.'));
         }
       }
       
@@ -1529,8 +1703,6 @@ function sj_registration_ajax_form_submit($form, &$form_state) {
       $path = 'paiement_par_cheque';
     }
     
-    //drupal_mail('sj_registration', 'registration' . $form_state['storage']['payment_method'], $form_state['storage']['email'], 'fr', $params = array('username' => 'John Potato'), 'contact@swingjammerz.com', $send = TRUE);
-    
     // In your ajax form submit callback
     ctools_include('ajax');
     ctools_add_js('ajax-responder');
@@ -1701,6 +1873,24 @@ function get_registration_payment($return_string = false) {
   }
   
   return $payment;
+}
+
+/**
+ * Get registration environment
+ * 
+ * @return string 
+ */
+function get_registration_environment() {
+  return variable_get('registration_environment', null);
+}
+
+/**
+ * Get registration admin email
+ * 
+ * @return string 
+ */
+function get_registration_admin_email() {
+  return variable_get('registration_admin_email', null);
 }
 
 /**

@@ -37,6 +37,9 @@ function sj_registration_admin()
           . 'Paiement en ligne: <b>' . get_registration_payment(true) . '</b>'
           . ' - <a href="/admin/config/sj_registration/settings/edit">' . t('Modifier') . '</a><br/>';
   
+  $content .= 'Environnement: <b>' . get_registration_environment() . '</b><br/>' . 'Email admin: <b>' . get_registration_admin_email()
+          . '</b> - <a href="/admin/config/sj_registration/environment/edit">' . t('Modifier') . '</a><br/>';
+  
   $content .= render_pricer();
   $content .= render_places();
   $content .= render_passes();
