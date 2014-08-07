@@ -17,8 +17,13 @@
         if (datas && datas.data && !isNaN(datas.data)) {
           $('button[data-id="edit-' + datas.name + '-' + datas.data + '"').addClass('active');
         }
-      } else {
+      } else if ($('#sj_registration_lessons').length) {
         $('input[type=checkbox]').removeAttr('checked');
+        
+        $('#price-pass').attr('title', '');
+        $('#price-pass').attr('data-price', 0);
+        $('#price-pass').html(0);
+        setTotalPrice();
       }
     });
     
@@ -77,11 +82,11 @@
         var prices = Drupal.settings.sj_registration.pricer;
         var passId = Drupal.settings.sj_registration.pass_id;
         
-        var countNormal = $('#sj_registration_lessons input[data-name="normal"]:checked').size();
-        var countInvitational = $('#sj_registration_lessons input[data-name="invitational"]:checked').size();
-
+        var countNormal = $('#sj_registration_lessons input[data-name="normal"][data-status="available"]:checked').size();
+        var countInvitational = $('#sj_registration_lessons input[data-name="invitational"][data-status="available"]:checked').size();
+        
         var i;
-        for (i = 0; i < prices.length; i++) { 
+        for (i = 0; i < prices.length; i++) {
           if (+prices[i].nb_lessons_normal == countNormal && +prices[i].nb_lessons_invitational == countInvitational 
               && +prices[i].pass_id == +passId) {
             $('#price-pass').attr('title', prices[i].description);
@@ -100,7 +105,8 @@
     });
     
     // Add Paypal fees to price
-    $('.form-item-payment-method input:radio').live('click', function() {
+    // Finally Paypal fees are not added to price
+    /*$('.form-item-payment-method input:radio').live('click', function() {
       if ($('#paypal-fee')) {
         $('#paypal-fee').remove();
         setTotalPrice();
@@ -115,7 +121,7 @@
         $('#price-type').after('<span id="paypal-fee" class="pointer" title="Paypal"> + ' + paypalFee + '</span>');
         $('#price-total').html(fullPrice);
       }
-    });
+    });*/
     
     // Tipsy gravity
     $('#registration-form-pricer span').tipsy({gravity: 'n', fade: true, live: true});

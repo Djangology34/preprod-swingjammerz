@@ -714,19 +714,24 @@ function generate_buttons(array $form, $element, $style = array('default')) {
     preg_match('/data-price=\"(.*?)\"/', $option, $price);
     preg_match('/data-name=\"(.*?)\"/', $option, $name);
     
+    if ($name[1] !== 'invitational') {
+      $button_style = current($style);
+
+      if (next($style)) {
+      } else {
+        reset($style);
+      }
+    } else {
+      $button_style = 'warning';
+    }
+    
     $id = 'edit-' . str_replace('_', '-', $element) . '-' . $key;
     $buttons .= '<button data-id="' . $id . '" data-type="' . $form[$element]['#type']
             . '" data-value="' . $key . '" data-name="' . $name[1] . '" data-price="' . $price[1] . '" class="btn btn-'
-            . current($style) . ' btn-lg">' . $option . '</button>';
+            . $button_style . ' btn-lg">' . $option . '</button>';
     
-    if (next($style)) {
-    } else {
-      reset($style);
-    }
   }
   $buttons .= '</div>';
-  
-  $form[$element]['#attributes'] = array('data-name' => $name[1]);
   
   $form[$element]['#prefix'] = isset($form[$element]['#prefix']) ? $form[$element]['#prefix'] .  $buttons : $buttons;
   $form[$element]['#prefix'] .= '<div class="hidden">';
@@ -889,7 +894,6 @@ function sj_registration_ajax_form($form, &$form_state) {
             ->condition('level', $form_state['storage']['level'])
             ->condition('l.year', get_season_year())
             ->condition('l.enabled', true)
-            ->condition('l.full', false)
             ->condition('l.event', 'cours')
             ->execute()
             ->fetchAll();
@@ -913,36 +917,17 @@ function sj_registration_ajax_form($form, &$form_state) {
       // Check availability for lessons
       $options = array();
       foreach ($lessons as $lesson) {
-        $lesson_couple = $lesson->type === 'couple';
-        $lesson_datas = check_availability($lesson);
-        
-        if ($is_couple) {
-          if ($lesson_couple && ($lesson_datas['leader']['availability'] <= 0 || $lesson_datas['follower']['availability'] <= 0) 
-                  || !$lesson_couple && ($lesson_datas['leader']['availability'] <= 1)) {
-            // No place available then do not suggest the lesson
-            continue;
-          }
-        } else {
-          if ($is_leader || !$is_couple) {
-            if ($lesson_datas['leader']['availability'] <= 0) {
-              // No place available then do not suggest the lesson
-              continue;
-            }
-          } else {
-            if ($lesson_datas['follower']['availability'] <= 0) {
-              // No place available then do not suggest the lesson
-              continue;
-            }
-          }
+        if ($lesson->category === 'invitational') {
+          $form['#prefix'] .= t('Cette année l\'association SwingJammerz a le plaisir de vous proposer des cours "invitational" qui seront assurés par des professeurs internationaux. C\'est une opportunité unique de prendre des cours avec des danseurs qui vivent de leur passion et ont une longue expérience du Lindy-Hop. Ce cours vous permettra de compléter vos cours réguliers en vous confrontant à des regards de professionnels et compétiteurs expérimentés qui tenteront dans la mesure du possible d\'identifier les besoins techniques ou artistiques du groupe. En raison du statut des enseignants ces cours ont une tarification spécifique.') . '<br/>';
         }
         
-        // Check if the student should be registered to option list
-        if (check_lesson_full($lesson, $form_state['storage']['gender'], $form_state['storage']['type'])) {
-          $options[$lesson->sjl_id] = '<span class="lesson-option-list"></span>' . '<span data-name="' . $lesson->category . '">' . $lesson->name . '</span>';
+        // Check if the student should be registered to waiting list
+        if (!check_lesson_availability($lesson, $form_state['storage']['gender'], $form_state['storage']['type']) || $lesson->full) {
+          $options[$lesson->sjl_id] = '<span class="lesson-option-list"></span>' . '<span class="registration-tipsy" title="' . $lesson->description . '" data-name="' . $lesson->category . '" data-status="full">' . $lesson->name . '</span>';
           
-          $form['couple'] = array('#markup' => '<div class="alert alert-danger alert-dismissable">' . t('Attention! Certains cours sont complets. Vous pouvez vous inscrire en liste d\'attente sur ces cours.<br/> Nous vous tiendrons alors informé par mail.') . '</div><br/>');
+          $form['couple'] = array('#markup' => '<div class="alert alert-danger alert-dismissable">' . t('Attention! Certains cours sont complets. Vous pouvez vous inscrire en liste d\'attente sur ces cours sans payer l\'inscription à ces cours. Nous vous tiendrons alors informé par mail.') . '</div><br/>');
         } else {
-          $options[$lesson->sjl_id] = '<span data-name="' . $lesson->category . '">' . $lesson->name . '</span>';
+          $options[$lesson->sjl_id] = '<span class="registration-tipsy" title="' . $lesson->description . '" data-name="' . $lesson->category . '" data-status="available">' . $lesson->name . '</span>';
         }
       }
       
@@ -950,6 +935,7 @@ function sj_registration_ajax_form($form, &$form_state) {
       
       $form['lessons'] = array(
         '#type' => 'checkboxes',
+        '#theme' => 'sjamelia_checkboxes',
         '#prefix' => '<label class="label-title">' . t('Choisissez @nb_lessons cours auquel vous souhaitez vous inscrire:', array('@nb_lessons' => $nb_lessons)) . '</label>',
         '#options' => $options,
         '#required' => TRUE
@@ -1203,7 +1189,7 @@ function sj_registration_ajax_form($form, &$form_state) {
       foreach ($lessons as $lesson) {
         $display_lessons .= $lesson->name;
         
-        if (check_lesson_full($lesson, $form_state['storage']['gender'], $form_state['storage']['type'])) {
+        if (check_lesson_availability($lesson, $form_state['storage']['gender'], $form_state['storage']['type'])) {
           $display_lessons .= '<span class="red"> (' . t('Option') . ')</span>';
         }
         
@@ -1255,9 +1241,10 @@ function sj_registration_ajax_form($form, &$form_state) {
               . '<table class="margin-top margin-bottom"><tbody>'
               . '<tr><td class="lobster tx-right">' . t('Méthode de paiement') . ':</td><td>' . $form_state['storage']['payment_method'] . '</td></tr>';
       
+      /* Finally paypal fees are not added to price
       if ($form_state['storage']['payment_method'] === 'paypal') {
         $form['rundown']['#markup'] .= '<tr><td class="lobster tx-right">' . t('Frais Paypal') . ':</td><td>' . getPaypalFee($price) . ' ' . $currency . '</td></tr>';
-      }
+      }*/
       
       $form['rundown']['#markup'] .= '<tr><td class="lobster tx-right">' . t('Prix total') . ':</td><td>' . $form_state['storage']['price'] . ' ' . $currency . '</td></tr>'
               . '</tbody></table>';
@@ -1496,7 +1483,7 @@ function sj_registration_ajax_form_submit($form, &$form_state) {
               ->execute()
               ->fetch();
 
-      $is_full = check_lesson_full($lesson, $form_state['storage']['gender'], $form_state['storage']['type']);
+      $is_full = check_lesson_availability($lesson, $form_state['storage']['gender'], $form_state['storage']['type']);
 
       $query = db_insert('sj_students_lessons')
             ->fields(array(
@@ -1521,7 +1508,7 @@ function sj_registration_ajax_form_submit($form, &$form_state) {
       // Automatically register one on option_list if any
       if (!$is_full) {
         $opposite_gender = $form_state['storage']['gender'] === 'masculin' ? 'féminin' : 'masculin';
-        $opposite_gender_is_full = check_lesson_full($lesson, $opposite_gender, $form_state['storage']['type']);
+        $opposite_gender_is_full = check_lesson_availability($lesson, $opposite_gender, $form_state['storage']['type']);
 
         if ($opposite_gender_is_full) {
           $query = db_query("UPDATE {sj_students_lessons} sl SET sl.option_list = :false 
@@ -1811,24 +1798,30 @@ function check_availability($lesson) {
  * 
  * @return boolean 
  */
-function check_lesson_full($lesson, $gender, $type) {
+function check_lesson_availability($lesson, $gender, $type) {
   if (!count(!$lesson instanceof stdClass)) {
     drupal_set_message(t('Erreur la vérification des places d\'un cours. Contactez l\'administrateur'));
     
     return 0;
   }
   
-  if ($type === 'couple') {
-    return 0;
-  }
-  
   $is_leader = $gender === 'masculin';
   $lesson_datas = check_availability($lesson);
   
-  $diff = $lesson_datas['leader']['count'] - $lesson_datas['follower']['count'];
-  $result = (abs($diff) > 3 && ($is_leader && $diff > 0) || (!$is_leader && $diff < 0)) ? 1 : 0;
+  if ($type === 'couple') {
+    return ($lesson_datas['leader']['availability'] === 0 || $lesson_datas['follower']['availability'] === 0) ? false : true;
+  } else {
+    if ($is_leader) {
+      return $lesson_datas['leader']['availability'] === 0 ? false : true;
+    } else {
+      return $lesson_datas['follower']['availability'] === 0 ? false : true;
+    }
+  }
   
-  return $result;
+  // Calculation of difference between leader and follower
+  //$diff = $lesson_datas['leader']['count'] - $lesson_datas['follower']['count'];
+  //$result = (abs($diff) > 3 && ($is_leader && $diff > 0) || (!$is_leader && $diff < 0)) ? 1 : 0;
+  //return $result;
 }
 
 /**
@@ -1873,20 +1866,22 @@ function calculateBasePrice($storage) {
   }
   
   if (count($storage['lessons'])) {
-    $countNormal = 0;
-    $countInvitational = 0;
+    $count_normal = 0;
+    $count_invitational = 0;
     
     foreach ($storage['lessons'] as $lesson_id) {
       $lesson = db_select('sj_lessons', 'l')
-              ->fields('l', array('category'))
+              ->fields('l')
               ->condition('l.sjl_id', $lesson_id)
               ->execute()
               ->fetch();
       
-      if ($lesson->category === 'normal') {
-        $countNormal++;
-      } elseif ($lesson->category === 'invitational') {
-        $countInvitational++;
+      $availability = check_lesson_availability($lesson, $storage['gender'], $storage['type']);
+      
+      if ($lesson->category === 'normal' && $availability) {
+        $count_normal++;
+      } elseif ($lesson->category === 'invitational' && $availability) {
+        $count_invitational++;
       }
     }
   }
@@ -1898,7 +1893,7 @@ function calculateBasePrice($storage) {
           ->fetchAll();
   
   foreach ($pricer as $price) {
-    if ($price->nb_lessons_normal == $countNormal && $price->nb_lessons_invitational == $countInvitational
+    if ($price->nb_lessons_normal == $count_normal && $price->nb_lessons_invitational == $count_invitational
             && $price->pass_id == $storage['pass_id']) {
       return $price->price;
     }
@@ -1934,9 +1929,10 @@ function calculatePrice($base_price, $type) {
  * @return float
  */
 function calculateTotalPrice($price, $is_paypal) {
+  /* Finally paypal fees are not added to price
   if ($is_paypal) {
     $price = $price + getPaypalFee($price);
-  }
+  }*/
   
   return  $price;
 }
